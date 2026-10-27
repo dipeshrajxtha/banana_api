@@ -31,3 +31,8 @@ yarn-error.log*
 Thumbs.db
 .vscode/
 .idea/
+
+# Internal Assignment Materials
+Assignment_brief/
+*.pdf
+
