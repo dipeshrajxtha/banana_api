@@ -1,22 +1,34 @@
-# Fast Ride - Road Rash Style Bike Racing Game
+# Banana Quest — CIS046-3 Software For Enterprise
 
-An event-driven full-stack 2D bike racing game built for **CIS046-3: Software for Enterprise**.
+An enterprise-grade, event-driven web puzzle game built on **Marc Conrad's Banana API** for **CIS046-3: Software for Enterprise** (University of Bedfordshire).
 
-## 🚀 Overview
-Fast Ride is a fast-paced Road Rash inspired motorcycle racing game featuring:
-- **Interactive Retro Canvas Gameplay**: High-speed racing, traffic dodging, and combat against rival bikers.
-- **Banana API Pit Stop & Nitro Mechanic**: Real-time integration with the Banana Puzzle API to unlock nitro boosts and repair bike health.
-- **Racer Virtual Identity**: Secure registration, login, and profile persistence with encrypted passwords and JWT/cookie session handling.
-- **Live Leaderboard & Garage**: Track career stats, best lap times, and unlocked bikes.
+---
 
-## 🏛️ Academic Themes & Architecture
-1. **Version Control & Modularity**: Feature-branch workflow, clean separation between frontend, backend, and external service layers.
-2. **Interoperability**: RESTful HTTP communication integrating third-party web services (Banana API) and backend endpoints with JSON payload contracts.
-3. **Event-Driven Architecture**: DOM keyboard events, animation frame events (`requestAnimationFrame`), collision events, and asynchronous event loops.
-4. **Virtual Identity**: Authentication & authorization protocols, password hashing with bcrypt, stateless JWT tokens, and secure session management.
+## 🎯 Project Overview
+**Banana Quest** is a fast-paced, brain-teasing puzzle game that tests players' mental math and visual deduction:
+- **Banana Puzzle Engine**: Directly connects to Marc Conrad's Banana API (`http://marcconrad.com/uob/banana/api.php?out=json`) to fetch dynamic math puzzle challenges.
+- **Game Modes**:
+  - **Speed Rush (Arcade)**: 60-second race against the clock with combo multipliers for rapid answers.
+  - **Survival Mode (3 Strikes)**: 3 lives, decreasing timer per puzzle, test how far you can go.
+- **Virtual Identity**: "Continue with Google" (Google OAuth 2.0 / OpenID Connect) + persistent player profiles and JWT in HttpOnly cookies.
+- **Player Dashboard**: High scores, average solve speed (ms), accuracy graph, and dynamic S/A/B/C/D player grading.
+- **Global Leaderboard**: Live global ranking of top puzzle solvers.
+- **Admin Panel**: Player moderation, security audit logs, and live Banana API health & latency monitor.
 
-## 🛠️ Tech Stack
-- **Frontend**: React, Canvas 2D API, Modern CSS
-- **Backend**: Node.js, Express.js
-- **Database/Storage**: SQLite / JSON Store for persistent racer profiles & leaderboards
-- **Third-Party Service**: Marc Conrad's Banana API
+---
+
+## 🏛️ Academic Themes & Architecture (Target: 90%+ Distinction)
+1. **Version Control**: Gitflow branching (`feature/*`, `develop`, `release/*`, `main`), semantic commits, release tagging (`v0.1.0` to `v1.0.0`), and modular separation.
+2. **Event-Driven Programming**: Custom Event Bus (`EventEmitter`), reactive keyboard/numpad events, tick timer loops, and decoupled UI HUD updates.
+3. **Interoperability**: Distributed REST communication with **Marc Conrad's Banana API** and **Google Identity Services**, JSON serialization, in-memory caching, and offline fallback generator.
+4. **Virtual Identity**: Google OAuth 2.0 federation, bcrypt password hashing, stateless JWT session tokens, and Role-Based Access Control (Player vs Admin).
+
+---
+
+## 🛠️ Technology Stack
+- **Frontend**: React 18, HTML5 Canvas & Web Audio API, Vanilla CSS (Modern Glassmorphism & Dark Mode)
+- **Backend**: Node.js, Express.js REST API
+- **Database**: SQLite / Persistent JSON store with relational schema
+- **External Web Services**:
+  - Marc Conrad's Banana API (`http://marcconrad.com/uob/banana/`)
+  - Google Identity Services (OAuth 2.0 / OpenID Connect)
