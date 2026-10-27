@@ -1,0 +1,8 @@
+{
+  "name": "@banana-quest/shared",
+  "version": "0.1.0",
+  "private": true,
+  "main": "src/index.js",
+  "type": "module",
+  "description": "Shared contracts, constants, and scoring formulas for Banana Quest"
+}
