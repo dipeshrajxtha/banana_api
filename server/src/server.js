@@ -7,12 +7,17 @@
 import app from './app.js';
 import { config } from './config/index.js';
 import { initDb } from './db/index.js';
+import { seedAdmin } from './db/seedAdmin.js';
 
 async function bootstrap() {
   try {
     // 1. Initialize SQLite Database Schemas
     await initDb();
     console.log('📦 Database tables and schemas verified.');
+
+    // 2. Seed Default Administrator (RBAC System)
+    await seedAdmin();
+
 
     // 2. Start HTTP Listener
     const server = app.listen(config.port, () => {
