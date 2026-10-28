@@ -1,48 +1,55 @@
+/**
+ * @file app.js
+ * @description Express Application entrypoint with security middlewares, routing, and centralized error handling.
+ * @module server/app
+ * @author Dipesh Raj Shrestha
+ * @reference University of Bedfordshire - CIS046-3 Software For Enterprise
+ */
+
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import { config } from './config/index.js';
+import { requestLogger } from './middleware/requestLogger.js';
+import { errorHandler } from './middleware/errorHandler.js';
+import { NotFoundError } from './utils/errors.js';
+
+// Route Imports
 import healthRouter from './routes/health.js';
 
 const app = express();
 
-// Security Middleware
+// 1. Security Headers (Helmet)
 app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' }
 }));
 
-// Cross-Origin Resource Sharing
+// 2. CORS (Cross-Origin Resource Sharing)
 app.use(cors({
   origin: config.clientUrl,
   credentials: true
 }));
 
-// Request Body and Cookie Parsers
+// 3. Request Logging
+if (config.nodeEnv !== 'test') {
+  app.use(requestLogger);
+}
+
+// 4. Body and Cookie Parsers
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// Primary API Routes
+// 5. REST API Routes
 app.use('/api/health', healthRouter);
 
-// Centralized 404 Handler
-app.use((req, res) => {
-  res.status(404).json({
-    error: 'Endpoint not found',
-    path: req.originalUrl,
-    timestamp: new Date().toISOString()
-  });
+// 6. 404 Handler for Unmatched Endpoints
+app.use((req, res, next) => {
+  next(new NotFoundError(`Endpoint '${req.method} ${req.originalUrl}' does not exist.`));
 });
 
-// Centralized Error Handling Middleware
-app.use((err, req, res, next) => {
-  console.error('[ServerError]', err);
-  const status = err.status || 500;
-  res.status(status).json({
-    error: err.message || 'Internal Server Error',
-    ...(config.nodeEnv === 'development' && { stack: err.stack })
-  });
-});
+// 7. Centralized Error Handling Middleware
+app.use(errorHandler);
 
 export default app;
