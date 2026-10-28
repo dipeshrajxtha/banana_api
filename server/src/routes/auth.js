@@ -13,7 +13,9 @@ import { hashPassword, comparePassword, generateToken, sanitizeUser } from '../u
 import { setAuthCookie, clearAuthCookie } from '../utils/cookie.js';
 import { authenticateToken } from '../middleware/auth.js';
 import { verifyGoogleIdToken } from '../services/googleAuthService.js';
+import { authRateLimiter } from '../middleware/rateLimiter.js';
 import { BadRequestError, UnauthorizedError, ForbiddenError } from '../utils/errors.js';
+
 
 
 const router = Router();
@@ -22,7 +24,8 @@ const router = Router();
  * @route POST /api/auth/register
  * @description Creates a new local user account with bcrypt password hashing
  */
-router.post('/register', async (req, res, next) => {
+router.post('/register', authRateLimiter, async (req, res, next) => {
+
   try {
     const { email, username, password } = req.body;
 
@@ -80,7 +83,7 @@ router.post('/register', async (req, res, next) => {
  * @route POST /api/auth/login
  * @description Authenticates local user with bcrypt hash comparison and issues JWT session
  */
-router.post('/login', async (req, res, next) => {
+router.post('/login', authRateLimiter, async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
@@ -137,7 +140,8 @@ router.post('/login', async (req, res, next) => {
  * @route POST /api/auth/google
  * @description Authenticates player via Google OAuth 2.0 OpenID Connect ID token
  */
-router.post('/google', async (req, res, next) => {
+router.post('/google', authRateLimiter, async (req, res, next) => {
+
   try {
     const { idToken } = req.body;
     if (!idToken) {
