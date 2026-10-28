@@ -17,6 +17,8 @@ import { NotFoundError } from './utils/errors.js';
 
 // Route Imports
 import healthRouter from './routes/health.js';
+import authRouter from './routes/auth.js';
+
 
 const app = express();
 
@@ -43,6 +45,8 @@ app.use(cookieParser());
 
 // 5. REST API Routes
 app.use('/api/health', healthRouter);
+app.use('/api/auth', authRouter);
+
 
 // 6. 404 Handler for Unmatched Endpoints
 app.use((req, res, next) => {
