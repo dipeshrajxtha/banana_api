@@ -1,6 +1,7 @@
 {
   "name": "banana-quest-monorepo",
-  "version": "0.1.0",
+  "version": "0.3.0",
+
   "private": true,
   "description": "Banana Quest - Enterprise-grade distributed math puzzle game for CIS046-3 Software For Enterprise",
   "author": "Dipesh Raj Shrestha",
