@@ -19,6 +19,8 @@ import { NotFoundError } from './utils/errors.js';
 import healthRouter from './routes/health.js';
 import authRouter from './routes/auth.js';
 import adminRouter from './routes/admin.js';
+import bananaRouter from './routes/banana.js';
+
 
 
 
@@ -49,6 +51,8 @@ app.use(cookieParser());
 app.use('/api/health', healthRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/admin', adminRouter);
+app.use('/api/banana', bananaRouter);
+
 
 
 
