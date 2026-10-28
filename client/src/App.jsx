@@ -1,16 +1,41 @@
-import React, { useState } from 'react';
-import { GRADE_TIERS, GAME_MODES } from '@banana-quest/shared';
+import React, { useState, useEffect } from 'react';
+import { GRADE_TIERS } from '@banana-quest/shared';
+import GoogleSignInButton from './components/GoogleSignInButton.jsx';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('welcome');
+  const [currentUser, setCurrentUser] = useState(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authError, setAuthError] = useState(null);
+
+  // Check for active session cookie on application mount
+  useEffect(() => {
+    fetch('/api/auth/me')
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data?.user) setCurrentUser(data.user);
+      })
+      .catch(() => {
+        // Guest mode by default
+      });
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      setCurrentUser(null);
+    } catch (err) {
+      console.error('Logout error:', err);
+    }
+  };
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       {/* Top Navigation Bar */}
       <header style={{
         borderBottom: '1px solid var(--border-subtle)',
-        background: 'rgba(10, 13, 20, 0.8)',
-        backdropFilter: 'blur(12px)',
+        background: 'rgba(10, 13, 20, 0.85)',
+        backdropFilter: 'blur(16px)',
         position: 'sticky',
         top: 0,
         zIndex: 50
@@ -23,6 +48,7 @@ export default function App() {
           justifyContent: 'space-between',
           alignItems: 'center'
         }}>
+          {/* Logo & Unit Branding */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <span style={{ fontSize: '1.8rem' }}>🍌</span>
             <div>
@@ -35,6 +61,7 @@ export default function App() {
             </div>
           </div>
 
+          {/* Navigation Links */}
           <nav style={{ display: 'flex', gap: '0.5rem' }}>
             {['welcome', 'modes', 'architecture', 'leaderboard'].map(tab => (
               <button
@@ -55,13 +82,66 @@ export default function App() {
             ))}
           </nav>
 
-          <div style={{ display: 'flex', gap: '0.75rem' }}>
-            <button className="btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}>
-              Sign In
-            </button>
-            <button className="btn-primary" style={{ padding: '0.5rem 1.25rem', fontSize: '0.85rem' }}>
-              Play Guest
-            </button>
+          {/* Virtual Identity / Profile Widget (Theme 4) */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            {currentUser ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  {currentUser.avatarUrl ? (
+                    <img
+                      src={currentUser.avatarUrl}
+                      alt={currentUser.username}
+                      style={{ width: '36px', height: '36px', borderRadius: '50%', border: '2px solid var(--accent-gold)' }}
+                    />
+                  ) : (
+                    <div style={{
+                      width: '36px',
+                      height: '36px',
+                      borderRadius: '50%',
+                      background: 'var(--accent-gold)',
+                      color: '#000',
+                      fontWeight: 800,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}>
+                      {currentUser.username.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <div style={{ textAlign: 'left' }}>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 700 }}>{currentUser.username}</div>
+                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                      {currentUser.authProvider === 'google' ? 'Google Account' : 'Local Player'}
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleLogout}
+                  className="btn-secondary"
+                  style={{ padding: '0.4rem 0.85rem', fontSize: '0.8rem' }}
+                >
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <>
+                <button
+                  onClick={() => setShowAuthModal(true)}
+                  className="btn-secondary"
+                  style={{ padding: '0.5rem 1.25rem', fontSize: '0.85rem' }}
+                >
+                  Sign In
+                </button>
+                <button
+                  onClick={() => setShowAuthModal(true)}
+                  className="btn-primary"
+                  style={{ padding: '0.5rem 1.25rem', fontSize: '0.85rem' }}
+                >
+                  Play with Google
+                </button>
+              </>
+            )}
           </div>
         </div>
       </header>
@@ -87,7 +167,7 @@ export default function App() {
           }}>
             <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: 'var(--accent-emerald)' }}></span>
             <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--accent-yellow)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              Day 1 Gitflow Milestone Active
+              Day 5 Milestone: Google OAuth 2.0 Active
             </span>
           </div>
 
@@ -97,12 +177,14 @@ export default function App() {
 
           <p style={{ maxWidth: '650px', margin: '0 auto 2rem auto', fontSize: '1.1rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
             An enterprise, event-driven cognitive arcade game powered by the University of Bedfordshire Banana API.
-            Compete on global leaderboards with real-time speed streaks and Google OAuth virtual identity.
+            {currentUser
+              ? ` Welcome back, ${currentUser.username}! Your career stats and rank are actively tracking.`
+              : ' Sign in with Google to record your high scores, earn Apex Legend rank, and challenge global solvers.'}
           </p>
 
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', flexWrap: 'wrap' }}>
             <button className="btn-primary" style={{ fontSize: '1.1rem', padding: '1rem 2rem' }}>
-              🚀 Start Challenge (Speed Rush)
+              🚀 Start Speed Rush (60s)
             </button>
             <button className="btn-secondary" style={{ fontSize: '1.1rem', padding: '1rem 1.75rem' }}>
               🛡️ Survival Mode (3 Strikes)
@@ -124,7 +206,7 @@ export default function App() {
               {
                 theme: 'Theme 1: Version Control',
                 badge: 'Gitflow & Monorepo',
-                desc: 'Component modularity across client, server, and shared packages. Feature branching and conventional commits.',
+                desc: 'Component modularity across client, server, and shared packages. Feature branching, semantic tags (v0.1.0-alpha).',
                 color: 'var(--accent-cyan)'
               },
               {
@@ -166,7 +248,7 @@ export default function App() {
           </div>
         </div>
 
-        {/* Performance Grade Tiers Showcase */}
+        {/* Dynamic Player Grading Tiers */}
         <div>
           <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <span>🏆</span> Dynamic Player Grading System (S to D Tier)
@@ -206,6 +288,76 @@ export default function App() {
           </div>
         </div>
       </main>
+
+      {/* Virtual Identity Authentication Modal */}
+      {showAuthModal && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0, 0, 0, 0.75)',
+          backdropFilter: 'blur(8px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 100,
+          padding: '1rem'
+        }}>
+          <div className="glass-panel" style={{
+            maxWidth: '440px',
+            width: '100%',
+            padding: '2rem',
+            textAlign: 'center',
+            position: 'relative'
+          }}>
+            <button
+              onClick={() => setShowAuthModal(false)}
+              style={{
+                position: 'absolute',
+                top: '1rem',
+                right: '1rem',
+                background: 'transparent',
+                border: 'none',
+                color: 'var(--text-muted)',
+                fontSize: '1.25rem',
+                cursor: 'pointer'
+              }}
+            >
+              ✕
+            </button>
+
+            <span style={{ fontSize: '2.5rem' }}>🔐</span>
+            <h3 style={{ fontSize: '1.5rem', marginTop: '0.5rem', marginBottom: '0.5rem' }}>
+              Player Virtual Identity
+            </h3>
+            <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
+              Sign in with your Google account or academic demo profile to track your scores.
+            </p>
+
+            {authError && (
+              <div style={{
+                background: 'rgba(244, 63, 94, 0.1)',
+                border: '1px solid var(--accent-rose)',
+                padding: '0.75rem',
+                borderRadius: 'var(--radius-sm)',
+                color: 'var(--accent-rose)',
+                fontSize: '0.85rem',
+                marginBottom: '1rem'
+              }}>
+                {authError}
+              </div>
+            )}
+
+            <GoogleSignInButton
+              onAuthSuccess={(user) => {
+                setCurrentUser(user);
+                setShowAuthModal(false);
+                setAuthError(null);
+              }}
+              onError={(err) => setAuthError(err)}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Footer */}
       <footer style={{

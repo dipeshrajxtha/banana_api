@@ -12,7 +12,9 @@ import { auditRepository } from '../db/auditRepository.js';
 import { hashPassword, comparePassword, generateToken, sanitizeUser } from '../utils/auth.js';
 import { setAuthCookie, clearAuthCookie } from '../utils/cookie.js';
 import { authenticateToken } from '../middleware/auth.js';
+import { verifyGoogleIdToken } from '../services/googleAuthService.js';
 import { BadRequestError, UnauthorizedError, ForbiddenError } from '../utils/errors.js';
+
 
 const router = Router();
 
@@ -123,6 +125,77 @@ router.post('/login', async (req, res, next) => {
     res.status(200).json({
       success: true,
       message: 'Logged in successfully',
+      user: sanitizeUser(user),
+      token
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * @route POST /api/auth/google
+ * @description Authenticates player via Google OAuth 2.0 OpenID Connect ID token
+ */
+router.post('/google', async (req, res, next) => {
+  try {
+    const { idToken } = req.body;
+    if (!idToken) {
+      throw new BadRequestError('Google ID token is required');
+    }
+
+    // 1. Verify Google ID token and extract identity claims
+    const googleProfile = await verifyGoogleIdToken(idToken);
+
+    // 2. Lookup existing user by Google ID or Email
+    let user = await usersRepository.findByGoogleId(googleProfile.googleId);
+
+    if (!user) {
+      user = await usersRepository.findByEmail(googleProfile.email);
+      if (user) {
+        // Link Google ID to existing account
+        user = await usersRepository.update(user.id, {
+          google_id: googleProfile.googleId,
+          avatar_url: googleProfile.picture || user.avatar_url
+        });
+      } else {
+        // Auto-provision new player account
+        user = await usersRepository.create({
+          email: googleProfile.email.toLowerCase(),
+          username: googleProfile.name || googleProfile.email.split('@')[0],
+          authProvider: 'google',
+          googleId: googleProfile.googleId,
+          avatarUrl: googleProfile.picture,
+          role: 'player'
+        });
+      }
+    } else if (googleProfile.picture && user.avatar_url !== googleProfile.picture) {
+      // Sync avatar updates from Google
+      user = await usersRepository.update(user.id, {
+        avatar_url: googleProfile.picture
+      });
+    }
+
+    // 3. Enforce ban check
+    if (user.is_banned) {
+      throw new ForbiddenError('Account suspended: Contact administrator');
+    }
+
+    // 4. Issue internal session JWT and secure HttpOnly cookie
+    const token = generateToken(user);
+    setAuthCookie(res, token);
+
+    // 5. Audit Logging
+    await auditRepository.log({
+      userId: user.id,
+      action: 'LOGIN_GOOGLE',
+      ipAddress: req.ip,
+      details: { email: user.email, googleId: googleProfile.googleId }
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Google authentication successful',
       user: sanitizeUser(user),
       token
     });
