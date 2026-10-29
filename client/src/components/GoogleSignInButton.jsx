@@ -8,23 +8,31 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 
+let isGisInitialized = false;
+
 export default function GoogleSignInButton({ onAuthSuccess, onError }) {
   const buttonRef = useRef(null);
   const [gisLoaded, setGisLoaded] = useState(false);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Check if Google Identity Services script is available in browser window
+    let isMounted = true;
+
     const checkGis = () => {
+      if (!isMounted) return;
       if (window.google?.accounts?.id) {
         setGisLoaded(true);
-        initializeGis();
+        setupGoogleButton();
       } else {
         setTimeout(checkGis, 300);
       }
     };
 
     checkGis();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const handleCredentialResponse = async (response) => {
@@ -51,19 +59,22 @@ export default function GoogleSignInButton({ onAuthSuccess, onError }) {
     }
   };
 
-  const initializeGis = () => {
+  const setupGoogleButton = () => {
     if (!window.google?.accounts?.id || !buttonRef.current) return;
 
     try {
-      // In production/dev, clientId can be passed via meta tag or window config
       const clientId = window.GOOGLE_CLIENT_ID || 'your_google_client_id.apps.googleusercontent.com';
 
-      window.google.accounts.id.initialize({
-        client_id: clientId,
-        callback: handleCredentialResponse,
-        auto_select: false
-      });
+      if (!isGisInitialized) {
+        window.google.accounts.id.initialize({
+          client_id: clientId,
+          callback: handleCredentialResponse,
+          auto_select: false
+        });
+        isGisInitialized = true;
+      }
 
+      // Render official Google button into dedicated DOM element
       window.google.accounts.id.renderButton(buttonRef.current, {
         theme: 'filled_black',
         size: 'large',
@@ -72,7 +83,7 @@ export default function GoogleSignInButton({ onAuthSuccess, onError }) {
         logo_alignment: 'left'
       });
     } catch (err) {
-      console.warn('[GIS] Google Sign-In button rendering note:', err.message);
+      console.warn('[GIS] Google Sign-In note:', err.message);
     }
   };
 
@@ -96,15 +107,22 @@ export default function GoogleSignInButton({ onAuthSuccess, onError }) {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', alignItems: 'center' }}>
-      {/* Official Google GIS Button Target */}
-      <div ref={buttonRef} style={{ minHeight: '40px', display: 'flex', alignItems: 'center' }}>
-        {!gisLoaded && (
-          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-            Loading Google Identity Services...
-          </span>
-        )}
-      </div>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', alignItems: 'center' }}>
+      {/* Loading state rendered outside Google target to prevent DOM collision */}
+      {!gisLoaded && (
+        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', height: '40px', display: 'flex', alignItems: 'center' }}>
+          Connecting to Google Identity Services...
+        </div>
+      )}
+
+      {/* Dedicated empty DOM target for Google GIS (No React children inside) */}
+      <div
+        ref={buttonRef}
+        style={{
+          minHeight: '40px',
+          display: gisLoaded ? 'block' : 'none'
+        }}
+      />
 
       {/* One-Click Fast / Offline Demo Sign-In for Tutor Review */}
       <button
@@ -113,7 +131,7 @@ export default function GoogleSignInButton({ onAuthSuccess, onError }) {
         className="btn-secondary"
         style={{
           fontSize: '0.85rem',
-          padding: '0.5rem 1rem',
+          padding: '0.55rem 1.25rem',
           borderRadius: 'var(--radius-full)',
           display: 'inline-flex',
           alignItems: 'center',
