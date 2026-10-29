@@ -31,36 +31,16 @@ export default function PuzzleArena({ gameMode = 'SPEED_RUSH', onGameOver, onQui
   const puzzleStartTimeRef = useRef(Date.now());
   const solveTimesRef = useRef([]);
 
-  // Game Timer (15s per puzzle in Survival, or 60s total in Speed Rush)
+  // Game Timer (60s total in Speed Rush; Unlimited time in Survival)
   const isSpeedRush = gameMode === 'SPEED_RUSH';
-  const puzzleDurationMs = isSpeedRush ? 60000 : 15000;
+  const speedRushDurationMs = 60000;
 
   const handleTimeout = useCallback(() => {
     if (isSpeedRush) {
       // Speed rush time expired -> Game Over
       finishGame();
-    } else {
-      // Survival mode -> lose 1 life and move to next puzzle
-      setLives((prev) => {
-        const nextLives = prev - 1;
-        eventBus.emit(GAME_EVENTS.LIFE_LOST, { livesRemaining: nextLives });
-
-        setFeedback({
-          type: 'wrong',
-          message: '⏰ TIME OUT! -1 LIFE'
-        });
-        setStreak(0);
-        setAttemptedCount((a) => a + 1);
-
-        if (nextLives <= 0) {
-          setTimeout(() => finishGame(), 1000);
-        } else {
-          setTimeout(() => fetchNextPuzzle(), 1200);
-        }
-        return nextLives;
-      });
     }
-  }, [isSpeedRush]);
+  }, [isSpeedRush, finishGame]);
 
   const timer = useGameTimer({
     warningThresholdMs: 4000,
@@ -115,24 +95,20 @@ export default function PuzzleArena({ gameMode = 'SPEED_RUSH', onGameOver, onQui
         isFallback: data.puzzle.isFallback
       });
 
-      // Start/reset countdown timer for this puzzle in Survival mode
-      if (!isSpeedRush) {
-        timer.start(puzzleDurationMs);
-      }
     } catch (err) {
       console.error('[PuzzleArena] Error fetching puzzle:', err);
       eventBus.emit(GAME_EVENTS.PUZZLE_ERROR, { error: err.message });
     } finally {
       setLoading(false);
     }
-  }, [isSpeedRush, puzzleDurationMs, timer]);
+  }, []);
 
   // Start round on component mount
   useEffect(() => {
     eventBus.emit(GAME_EVENTS.GAME_STARTED, { gameMode });
     fetchNextPuzzle();
     if (isSpeedRush) {
-      timer.start(puzzleDurationMs);
+      timer.start(speedRushDurationMs);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -324,19 +300,21 @@ export default function PuzzleArena({ gameMode = 'SPEED_RUSH', onGameOver, onQui
             </div>
           )}
 
-          {/* Countdown Clock */}
+          {/* Countdown Clock (Speed Rush) or Unlimited Indicator (Survival) */}
           <div style={{ textAlign: 'right' }}>
             <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-              {isSpeedRush ? 'Time Left' : 'Puzzle Clock'}
+              {isSpeedRush ? 'Time Left' : 'Time Limit'}
             </div>
             <div style={{
               fontSize: '1.75rem',
               fontWeight: 900,
               fontFamily: 'var(--font-mono)',
-              color: timer.isWarning ? 'var(--accent-rose)' : 'var(--text-primary)',
-              animation: timer.isWarning ? 'pulse 0.8s infinite' : 'none'
+              color: isSpeedRush
+                ? (timer.isWarning ? 'var(--accent-rose)' : 'var(--text-primary)')
+                : 'var(--accent-emerald)',
+              animation: isSpeedRush && timer.isWarning ? 'pulse 0.8s infinite' : 'none'
             }}>
-              {timer.secondsRemaining}s
+              {isSpeedRush ? `${timer.secondsRemaining}s` : '∞ Untimed'}
             </div>
           </div>
 
@@ -350,21 +328,23 @@ export default function PuzzleArena({ gameMode = 'SPEED_RUSH', onGameOver, onQui
         </div>
       </div>
 
-      {/* Timer Progress Bar */}
-      <div style={{
-        width: '100%',
-        height: '6px',
-        background: 'var(--bg-tertiary)',
-        borderRadius: 'var(--radius-full)',
-        overflow: 'hidden'
-      }}>
+      {/* Timer Progress Bar (Speed Rush Only) */}
+      {isSpeedRush && (
         <div style={{
-          width: `${timer.progress * 100}%`,
-          height: '100%',
-          background: timer.isWarning ? 'var(--grad-danger)' : 'var(--grad-banana)',
-          transition: 'width 100ms linear'
-        }} />
-      </div>
+          width: '100%',
+          height: '6px',
+          background: 'var(--bg-tertiary)',
+          borderRadius: 'var(--radius-full)',
+          overflow: 'hidden'
+        }}>
+          <div style={{
+            width: `${timer.progress * 100}%`,
+            height: '100%',
+            background: timer.isWarning ? 'var(--grad-danger)' : 'var(--grad-banana)',
+            transition: 'width 100ms linear'
+          }} />
+        </div>
+      )}
 
       {/* Main Puzzle Display Arena */}
       <div style={{

@@ -451,10 +451,10 @@ export default function App() {
                     <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🛡️</div>
                     <h3 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '0.5rem' }}>Survival Mode</h3>
                     <div style={{ fontSize: '0.85rem', color: 'var(--accent-rose)', fontWeight: 700, marginBottom: '1rem' }}>
-                      3 Lives • 15s Per Puzzle
+                      3 Lives • Unlimited Time
                     </div>
                     <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '1.5rem' }}>
-                      Sudden death puzzle endurance. You have 3 hearts and 15 seconds per puzzle. Every wrong answer or timeout consumes 1 heart. How far can you survive?
+                      Sudden death puzzle endurance. You have 3 hearts and unlimited time per puzzle. Think carefully—every wrong answer consumes 1 heart. How far can you survive?
                     </p>
                     <button
                       onClick={() => handleStartGame(GAME_MODES.SURVIVAL)}
