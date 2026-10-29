@@ -31,39 +31,59 @@ export default function PuzzleArena({ gameMode = 'SPEED_RUSH', onGameOver, onQui
   const puzzleStartTimeRef = useRef(Date.now());
   const solveTimesRef = useRef([]);
 
-  // Game Timer (60s total in Speed Rush; Unlimited time in Survival)
+  // Synchronization refs to prevent stale closures and TDZ initialization errors
+  const scoreRef = useRef(0);
+  const streakRef = useRef(0);
+  const maxStreakRef = useRef(0);
+  const solvedCountRef = useRef(0);
+  const attemptedCountRef = useRef(0);
+  const livesRef = useRef(gameMode === 'SURVIVAL' ? 3 : null);
+  const finishGameRef = useRef(null);
+
+  // Keep refs synchronized with state
+  scoreRef.current = score;
+  streakRef.current = streak;
+  maxStreakRef.current = maxStreak;
+  solvedCountRef.current = solvedCount;
+  attemptedCountRef.current = attemptedCount;
+  livesRef.current = lives;
+
+  // Game Mode Configuration
   const isSpeedRush = gameMode === 'SPEED_RUSH';
   const speedRushDurationMs = 60000;
 
+  // Timer callback delegates to finishGameRef to avoid TDZ circularity
   const handleTimeout = useCallback(() => {
-    if (isSpeedRush) {
-      // Speed rush time expired -> Game Over
-      finishGame();
+    if (isSpeedRush && finishGameRef.current) {
+      finishGameRef.current();
     }
-  }, [isSpeedRush, finishGame]);
+  }, [isSpeedRush]);
 
   const timer = useGameTimer({
     warningThresholdMs: 4000,
     onTimeout: handleTimeout
   });
 
-  // Finish game and compile session telemetry
+  // Finish game compiles authoritative telemetry from synchronization refs
   const finishGame = useCallback(() => {
     timer.stop();
-    const totalAttempted = attemptedCount || 1;
-    const accuracy = Math.round((solvedCount / totalAttempted) * 100);
+    const totalAttempted = attemptedCountRef.current;
+    const solved = solvedCountRef.current;
+    const finalScore = scoreRef.current;
+    const bestStreak = maxStreakRef.current;
+    const accuracy = totalAttempted > 0 ? Math.round((solved / totalAttempted) * 100) : 0;
     const avgTime = solveTimesRef.current.length > 0
       ? Math.round(solveTimesRef.current.reduce((a, b) => a + b, 0) / solveTimesRef.current.length)
-      : 5000;
+      : 0;
 
     const sessionSummary = {
       gameMode,
-      totalScore: score,
-      puzzlesAttempted: attemptedCount,
-      puzzlesSolved: solvedCount,
+      totalScore: finalScore,
+      puzzlesAttempted: totalAttempted,
+      puzzlesSolved: solved,
       accuracyPct: accuracy,
       avgSolveTimeMs: avgTime,
-      maxStreak
+      maxStreak: bestStreak
     };
 
     // Emit event bus game over signal for audio engine and telemetry handlers
@@ -72,7 +92,10 @@ export default function PuzzleArena({ gameMode = 'SPEED_RUSH', onGameOver, onQui
     if (onGameOver) {
       onGameOver(sessionSummary);
     }
-  }, [score, attemptedCount, solvedCount, maxStreak, gameMode, onGameOver, timer]);
+  }, [gameMode, onGameOver, timer]);
+
+  // Bind ref to latest finishGame instance
+  finishGameRef.current = finishGame;
 
   // Fetch next puzzle from backend proxy
   const fetchNextPuzzle = useCallback(async () => {
@@ -94,7 +117,6 @@ export default function PuzzleArena({ gameMode = 'SPEED_RUSH', onGameOver, onQui
         puzzleId: data.puzzle.puzzleId,
         isFallback: data.puzzle.isFallback
       });
-
     } catch (err) {
       console.error('[PuzzleArena] Error fetching puzzle:', err);
       eventBus.emit(GAME_EVENTS.PUZZLE_ERROR, { error: err.message });
@@ -129,25 +151,46 @@ export default function PuzzleArena({ gameMode = 'SPEED_RUSH', onGameOver, onQui
           puzzleId: currentPuzzle.puzzleId,
           answer: selectedDigit,
           responseTimeMs,
-          currentStreak: streak
+          currentStreak: streakRef.current
         })
       });
+
+      if (!res.ok) {
+        throw new Error(`Verification endpoint failed with status ${res.status}`);
+      }
 
       const data = await res.json();
       const result = data.result;
 
-      setAttemptedCount((prev) => prev + 1);
+      if (!result) {
+        throw new Error('Empty verification result payload');
+      }
+
+      const nextAttempted = attemptedCountRef.current + 1;
+      attemptedCountRef.current = nextAttempted;
+      setAttemptedCount(nextAttempted);
 
       if (result.isCorrect) {
-        const nextStreak = streak + 1;
+        const nextStreak = streakRef.current + 1;
+        streakRef.current = nextStreak;
         setStreak(nextStreak);
-        setMaxStreak((prev) => Math.max(prev, nextStreak));
-        setSolvedCount((prev) => prev + 1);
-        setScore((prev) => prev + result.pointsAwarded);
+
+        const nextMaxStreak = Math.max(maxStreakRef.current, nextStreak);
+        maxStreakRef.current = nextMaxStreak;
+        setMaxStreak(nextMaxStreak);
+
+        const nextSolved = solvedCountRef.current + 1;
+        solvedCountRef.current = nextSolved;
+        setSolvedCount(nextSolved);
+
+        const points = result.pointsAwarded || 100;
+        const nextScore = scoreRef.current + points;
+        scoreRef.current = nextScore;
+        setScore(nextScore);
 
         // Emit decoupled events for audio synthesizer and stats
         eventBus.emit(GAME_EVENTS.ANSWER_CORRECT, {
-          points: result.pointsAwarded,
+          points,
           streak: nextStreak,
           speedLabel: result.speedLabel
         });
@@ -155,14 +198,18 @@ export default function PuzzleArena({ gameMode = 'SPEED_RUSH', onGameOver, onQui
 
         setFeedback({
           type: 'correct',
-          message: `CORRECT! +${result.pointsAwarded} pts (${result.speedLabel})`,
-          points: result.pointsAwarded
+          message: `CORRECT! +${points} pts (${result.speedLabel})`,
+          points
         });
 
         // Auto transition to next puzzle after positive feedback
-        setTimeout(() => fetchNextPuzzle(), 900);
+        setTimeout(() => {
+          fetchNextPuzzle();
+        }, 850);
       } else {
+        streakRef.current = 0;
         setStreak(0);
+
         eventBus.emit(GAME_EVENTS.ANSWER_WRONG, {
           trueSolution: result.trueSolution
         });
@@ -173,23 +220,28 @@ export default function PuzzleArena({ gameMode = 'SPEED_RUSH', onGameOver, onQui
         });
 
         if (gameMode === 'SURVIVAL') {
-          const nextLives = lives - 1;
+          const nextLives = livesRef.current - 1;
+          livesRef.current = nextLives;
           setLives(nextLives);
           eventBus.emit(GAME_EVENTS.LIFE_LOST, { livesRemaining: nextLives });
 
           if (nextLives <= 0) {
-            setTimeout(() => finishGame(), 1000);
+            setTimeout(() => {
+              if (finishGameRef.current) finishGameRef.current();
+            }, 1000);
             return;
           }
         }
 
-        setTimeout(() => fetchNextPuzzle(), 1200);
+        setTimeout(() => {
+          fetchNextPuzzle();
+        }, 1100);
       }
     } catch (err) {
       console.error('[PuzzleArena] Verification error:', err);
       setLoading(false);
     }
-  }, [selectedDigit, currentPuzzle, loading, streak, gameMode, lives, finishGame, fetchNextPuzzle]);
+  }, [selectedDigit, currentPuzzle, loading, gameMode, fetchNextPuzzle]);
 
   // Reactive DOM Keyboard Listener (Theme 2: Event-Driven Programming)
   useEffect(() => {
