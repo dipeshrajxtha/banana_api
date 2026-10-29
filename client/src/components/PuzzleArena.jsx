@@ -1,15 +1,18 @@
 /**
  * @file PuzzleArena.jsx
  * @description Main interactive game arena rendering Banana API math puzzles, timer, and reactive inputs.
+ * Deeply integrates with CustomEventBus to decouple gameplay signals, audio, and HUD diagnostics.
  * @module client/components/PuzzleArena
  * @author Dipesh Raj Shrestha
  * @reference Marc Conrad - https://marcconrad.com/uob/banana/doc.php
- * @reference University of Bedfordshire - CIS046-3 Software For Enterprise
+ * @reference University of Bedfordshire - CIS046-3 Software For Enterprise (Theme 2)
  */
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { GAME_EVENTS } from '@banana-quest/shared';
 import Numpad from './Numpad.jsx';
 import { useGameTimer } from '../hooks/useGameTimer.js';
+import { eventBus } from '../events/eventBus.js';
 
 export default function PuzzleArena({ gameMode = 'SPEED_RUSH', onGameOver, onQuit }) {
   // Game State
@@ -40,6 +43,8 @@ export default function PuzzleArena({ gameMode = 'SPEED_RUSH', onGameOver, onQui
       // Survival mode -> lose 1 life and move to next puzzle
       setLives((prev) => {
         const nextLives = prev - 1;
+        eventBus.emit(GAME_EVENTS.LIFE_LOST, { livesRemaining: nextLives });
+
         setFeedback({
           type: 'wrong',
           message: '⏰ TIME OUT! -1 LIFE'
@@ -71,16 +76,21 @@ export default function PuzzleArena({ gameMode = 'SPEED_RUSH', onGameOver, onQui
       ? Math.round(solveTimesRef.current.reduce((a, b) => a + b, 0) / solveTimesRef.current.length)
       : 5000;
 
+    const sessionSummary = {
+      gameMode,
+      totalScore: score,
+      puzzlesAttempted: attemptedCount,
+      puzzlesSolved: solvedCount,
+      accuracyPct: accuracy,
+      avgSolveTimeMs: avgTime,
+      maxStreak
+    };
+
+    // Emit event bus game over signal for audio engine and telemetry handlers
+    eventBus.emit(GAME_EVENTS.GAME_OVER, sessionSummary);
+
     if (onGameOver) {
-      onGameOver({
-        gameMode,
-        totalScore: score,
-        puzzlesAttempted: attemptedCount,
-        puzzlesSolved: solvedCount,
-        accuracyPct: accuracy,
-        avgSolveTimeMs: avgTime,
-        maxStreak
-      });
+      onGameOver(sessionSummary);
     }
   }, [score, attemptedCount, solvedCount, maxStreak, gameMode, onGameOver, timer]);
 
@@ -91,6 +101,8 @@ export default function PuzzleArena({ gameMode = 'SPEED_RUSH', onGameOver, onQui
       setSelectedDigit(null);
       setFeedback(null);
 
+      eventBus.emit(GAME_EVENTS.PUZZLE_REQUESTED);
+
       const res = await fetch('/api/banana/puzzle');
       if (!res.ok) throw new Error('Failed to load puzzle');
       const data = await res.json();
@@ -98,12 +110,18 @@ export default function PuzzleArena({ gameMode = 'SPEED_RUSH', onGameOver, onQui
       setCurrentPuzzle(data.puzzle);
       puzzleStartTimeRef.current = Date.now();
 
-      // Start/reset countdown timer for this puzzle
+      eventBus.emit(GAME_EVENTS.PUZZLE_LOADED, {
+        puzzleId: data.puzzle.puzzleId,
+        isFallback: data.puzzle.isFallback
+      });
+
+      // Start/reset countdown timer for this puzzle in Survival mode
       if (!isSpeedRush) {
         timer.start(puzzleDurationMs);
       }
     } catch (err) {
       console.error('[PuzzleArena] Error fetching puzzle:', err);
+      eventBus.emit(GAME_EVENTS.PUZZLE_ERROR, { error: err.message });
     } finally {
       setLoading(false);
     }
@@ -111,6 +129,7 @@ export default function PuzzleArena({ gameMode = 'SPEED_RUSH', onGameOver, onQui
 
   // Start round on component mount
   useEffect(() => {
+    eventBus.emit(GAME_EVENTS.GAME_STARTED, { gameMode });
     fetchNextPuzzle();
     if (isSpeedRush) {
       timer.start(puzzleDurationMs);
@@ -150,6 +169,14 @@ export default function PuzzleArena({ gameMode = 'SPEED_RUSH', onGameOver, onQui
         setSolvedCount((prev) => prev + 1);
         setScore((prev) => prev + result.pointsAwarded);
 
+        // Emit decoupled events for audio synthesizer and stats
+        eventBus.emit(GAME_EVENTS.ANSWER_CORRECT, {
+          points: result.pointsAwarded,
+          streak: nextStreak,
+          speedLabel: result.speedLabel
+        });
+        eventBus.emit(GAME_EVENTS.STREAK_UPDATED, { streak: nextStreak });
+
         setFeedback({
           type: 'correct',
           message: `CORRECT! +${result.pointsAwarded} pts (${result.speedLabel})`,
@@ -160,6 +187,10 @@ export default function PuzzleArena({ gameMode = 'SPEED_RUSH', onGameOver, onQui
         setTimeout(() => fetchNextPuzzle(), 900);
       } else {
         setStreak(0);
+        eventBus.emit(GAME_EVENTS.ANSWER_WRONG, {
+          trueSolution: result.trueSolution
+        });
+
         setFeedback({
           type: 'wrong',
           message: `INCORRECT! (Correct Answer: ${result.trueSolution})`
@@ -168,6 +199,8 @@ export default function PuzzleArena({ gameMode = 'SPEED_RUSH', onGameOver, onQui
         if (gameMode === 'SURVIVAL') {
           const nextLives = lives - 1;
           setLives(nextLives);
+          eventBus.emit(GAME_EVENTS.LIFE_LOST, { livesRemaining: nextLives });
+
           if (nextLives <= 0) {
             setTimeout(() => finishGame(), 1000);
             return;
@@ -189,11 +222,16 @@ export default function PuzzleArena({ gameMode = 'SPEED_RUSH', onGameOver, onQui
 
       // Handle Digits 0-9 (Physical number keys and Numpad)
       if (/^[0-9]$/.test(e.key)) {
-        setSelectedDigit(parseInt(e.key, 10));
+        const digit = parseInt(e.key, 10);
+        setSelectedDigit(digit);
+        eventBus.emit(GAME_EVENTS.INPUT_DIGIT, { digit });
       } else if (e.code.startsWith('Numpad') && /^[0-9]$/.test(e.key)) {
-        setSelectedDigit(parseInt(e.key, 10));
+        const digit = parseInt(e.key, 10);
+        setSelectedDigit(digit);
+        eventBus.emit(GAME_EVENTS.INPUT_DIGIT, { digit });
       } else if (e.key === 'Backspace' || e.key === 'Delete') {
         setSelectedDigit(null);
+        eventBus.emit(GAME_EVENTS.INPUT_CLEAR);
       } else if (e.key === 'Enter') {
         e.preventDefault();
         handleSubmitAnswer();

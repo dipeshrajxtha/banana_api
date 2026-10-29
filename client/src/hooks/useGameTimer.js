@@ -1,21 +1,23 @@
 /**
  * @file useGameTimer.js
- * @description High-precision requestAnimationFrame delta-timing countdown hook.
+ * @description High-precision requestAnimationFrame delta-timing countdown hook with EventBus signal emission.
  * @module client/hooks/useGameTimer
  * @author Dipesh Raj Shrestha
  * @reference University of Bedfordshire - CIS046-3 Software For Enterprise (Theme 2: Event-Driven Programming)
  */
 
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { GAME_EVENTS } from '@banana-quest/shared';
+import { eventBus } from '../events/eventBus.js';
 
 /**
- * High-precision game timer driven by requestAnimationFrame
- * Avoids setInterval drift and throttling when browser tabs switch.
+ * High-precision game timer driven by requestAnimationFrame.
+ * Emits signals over the decoupled EventBus on warning threshold and timeout.
  * @param {object} options
- * @param {number} [options.warningThresholdMs=5000] - Threshold when timer enters warning state
+ * @param {number} [options.warningThresholdMs=4000] - Threshold when timer enters warning state
  * @param {Function} [options.onTimeout] - Callback invoked when timer expires
  */
-export function useGameTimer({ warningThresholdMs = 5000, onTimeout } = {}) {
+export function useGameTimer({ warningThresholdMs = 4000, onTimeout } = {}) {
   const [timeLeftMs, setTimeLeftMs] = useState(0);
   const [totalDurationMs, setTotalDurationMs] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
@@ -24,6 +26,7 @@ export function useGameTimer({ warningThresholdMs = 5000, onTimeout } = {}) {
   const startTimeRef = useRef(null);
   const durationRef = useRef(0);
   const onTimeoutRef = useRef(onTimeout);
+  const hasEmittedWarningRef = useRef(false);
 
   useEffect(() => {
     onTimeoutRef.current = onTimeout;
@@ -37,16 +40,23 @@ export function useGameTimer({ warningThresholdMs = 5000, onTimeout } = {}) {
 
     setTimeLeftMs(remaining);
 
+    // Emit event bus signal on warning threshold
+    if (remaining <= warningThresholdMs && remaining > 0 && !hasEmittedWarningRef.current) {
+      hasEmittedWarningRef.current = true;
+      eventBus.emit(GAME_EVENTS.TIMER_WARNING, { remainingMs: remaining });
+    }
+
     if (remaining > 0) {
       requestRef.current = requestAnimationFrame(tick);
     } else {
       setIsRunning(false);
       cancelAnimationFrame(requestRef.current);
+      eventBus.emit(GAME_EVENTS.TIMER_EXPIRED);
       if (onTimeoutRef.current) {
         onTimeoutRef.current();
       }
     }
-  }, []);
+  }, [warningThresholdMs]);
 
   const start = useCallback((durationMs) => {
     cancelAnimationFrame(requestRef.current);
@@ -54,6 +64,7 @@ export function useGameTimer({ warningThresholdMs = 5000, onTimeout } = {}) {
     setTotalDurationMs(durationMs);
     setTimeLeftMs(durationMs);
     setIsRunning(true);
+    hasEmittedWarningRef.current = false;
     startTimeRef.current = null;
     requestRef.current = requestAnimationFrame(tick);
   }, [tick]);
@@ -62,6 +73,7 @@ export function useGameTimer({ warningThresholdMs = 5000, onTimeout } = {}) {
     setIsRunning(false);
     cancelAnimationFrame(requestRef.current);
     setTimeLeftMs(0);
+    hasEmittedWarningRef.current = false;
   }, []);
 
   const reset = useCallback((newDurationMs) => {
@@ -71,6 +83,7 @@ export function useGameTimer({ warningThresholdMs = 5000, onTimeout } = {}) {
     setTotalDurationMs(d);
     setTimeLeftMs(d);
     setIsRunning(false);
+    hasEmittedWarningRef.current = false;
     startTimeRef.current = null;
   }, []);
 
