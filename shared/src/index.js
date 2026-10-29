@@ -11,7 +11,7 @@
  */
 export const GAME_MODES = {
   SPEED_RUSH: 'SPEED_RUSH', // 60s timed sprint
-  SURVIVAL: 'SURVIVAL',     // 3 lives, 15s per puzzle
+  SURVIVAL: 'SURVIVAL',     // 3 lives, unlimited time (strike-out)
   PRACTICE: 'PRACTICE'      // Casual 10-puzzle run
 };
 
