@@ -1,15 +1,35 @@
 /**
  * @file Numpad.jsx
- * @description Interactive arcade keypad component with tactile click states and hotkey hints.
+ * @description Interactive arcade keypad component with tactile click states, hotkey hints, and EventBus integration.
  * @module client/components/Numpad
  * @author Dipesh Raj Shrestha
  * @reference University of Bedfordshire - CIS046-3 Software For Enterprise (Theme 2: Event-Driven Programming)
  */
 
 import React from 'react';
+import { GAME_EVENTS } from '@banana-quest/shared';
+import { eventBus } from '../events/eventBus.js';
 
 export default function Numpad({ onDigitPress, onClear, onSubmit, disabled = false, activeDigit = null }) {
   const digits = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+
+  const handleDigit = (digit) => {
+    if (disabled) return;
+    eventBus.emit(GAME_EVENTS.INPUT_DIGIT, { digit });
+    if (onDigitPress) onDigitPress(digit);
+  };
+
+  const handleClear = () => {
+    if (disabled || activeDigit === null) return;
+    eventBus.emit(GAME_EVENTS.INPUT_CLEAR);
+    if (onClear) onClear();
+  };
+
+  const handleSubmit = () => {
+    if (disabled || activeDigit === null) return;
+    eventBus.emit(GAME_EVENTS.ANSWER_SUBMITTED, { answer: activeDigit });
+    if (onSubmit) onSubmit();
+  };
 
   return (
     <div style={{
@@ -33,7 +53,7 @@ export default function Numpad({ onDigitPress, onClear, onSubmit, disabled = fal
               key={digit}
               type="button"
               disabled={disabled}
-              onClick={() => onDigitPress(digit)}
+              onClick={() => handleDigit(digit)}
               className="numpad-btn"
               style={{
                 height: '62px',
@@ -60,7 +80,7 @@ export default function Numpad({ onDigitPress, onClear, onSubmit, disabled = fal
         <button
           type="button"
           disabled={disabled || activeDigit === null}
-          onClick={onClear}
+          onClick={handleClear}
           className="btn-secondary"
           style={{
             height: '62px',
@@ -81,7 +101,7 @@ export default function Numpad({ onDigitPress, onClear, onSubmit, disabled = fal
         <button
           type="button"
           disabled={disabled}
-          onClick={() => onDigitPress(0)}
+          onClick={() => handleDigit(0)}
           className="numpad-btn"
           style={{
             height: '62px',
@@ -99,7 +119,7 @@ export default function Numpad({ onDigitPress, onClear, onSubmit, disabled = fal
         <button
           type="button"
           disabled={disabled || activeDigit === null}
-          onClick={onSubmit}
+          onClick={handleSubmit}
           className="btn-primary"
           style={{
             height: '62px',
