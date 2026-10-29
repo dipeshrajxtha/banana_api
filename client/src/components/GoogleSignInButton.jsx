@@ -63,7 +63,10 @@ export default function GoogleSignInButton({ onAuthSuccess, onError }) {
     if (!window.google?.accounts?.id || !buttonRef.current) return;
 
     try {
-      const clientId = window.GOOGLE_CLIENT_ID || 'your_google_client_id.apps.googleusercontent.com';
+      const clientId = window.GOOGLE_CLIENT_ID ||
+        import.meta.env.VITE_GOOGLE_CLIENT_ID ||
+        '189311461066-mtonmntvqngjmkquthg0753jqf2h9jif.apps.googleusercontent.com';
+
 
       if (!isGisInitialized) {
         window.google.accounts.id.initialize({
