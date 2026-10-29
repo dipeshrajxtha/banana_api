@@ -2,6 +2,7 @@
  * @file App.jsx
  * @description Main application shell for Banana Quest (CIS046-3 Software For Enterprise).
  * Orchestrates navigation, game lifecycle, virtual identity auth, and theme diagnostic panels.
+ * Integrates Theme 2 (Event-Driven Programming) via CustomEventBus and native Web Audio synthesizer.
  * @module client/App
  * @author Dipesh Raj Shrestha
  * @reference Marc Conrad - https://marcconrad.com/uob/banana/doc.php
@@ -13,12 +14,18 @@ import { GRADE_TIERS, GAME_MODES } from '@banana-quest/shared';
 import GoogleSignInButton from './components/GoogleSignInButton.jsx';
 import PuzzleArena from './components/PuzzleArena.jsx';
 import GameOverModal from './components/GameOverModal.jsx';
+import { soundService } from './services/soundService.js';
+import { eventBus } from './events/eventBus.js';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('welcome');
   const [currentUser, setCurrentUser] = useState(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authError, setAuthError] = useState(null);
+
+  // Audio & Event-Driven Engine State
+  const [isMuted, setIsMuted] = useState(soundService.isMuted);
+  const [busEvents, setBusEvents] = useState([]);
 
   // Active Gameplay State
   const [activeGameMode, setActiveGameMode] = useState(null);
@@ -27,6 +34,21 @@ export default function App() {
   // Architecture telemetry state
   const [telemetryData, setTelemetryData] = useState(null);
   const [telemetryLoading, setTelemetryLoading] = useState(false);
+
+  // Bind Web Audio API synthesizer to EventBus on mount
+  useEffect(() => {
+    soundService.bindToEventBus();
+
+    // Refresh event bus history periodically for Architecture inspector
+    const interval = setInterval(() => {
+      setBusEvents(eventBus.getHistory());
+    }, 1000);
+
+    return () => {
+      soundService.unbindEventBus();
+      clearInterval(interval);
+    };
+  }, []);
 
   // Check for active session cookie on application mount
   useEffect(() => {
@@ -39,6 +61,11 @@ export default function App() {
         // Guest mode by default
       });
   }, []);
+
+  const handleToggleAudio = () => {
+    const nextState = soundService.toggleMute();
+    setIsMuted(nextState);
+  };
 
   const handleLogout = async () => {
     try {
@@ -112,7 +139,10 @@ export default function App() {
                 onClick={() => {
                   setActiveGameMode(null);
                   setActiveTab(tab);
-                  if (tab === 'architecture') handleFetchTelemetry();
+                  if (tab === 'architecture') {
+                    handleFetchTelemetry();
+                    setBusEvents(eventBus.getHistory());
+                  }
                 }}
                 className="btn-secondary"
                 style={{
@@ -129,8 +159,28 @@ export default function App() {
             ))}
           </nav>
 
-          {/* Virtual Identity / Profile Widget (Theme 4) */}
+          {/* Audio Controls & Virtual Identity (Theme 2 & 4) */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            {/* Native Web Audio API Mute Toggle */}
+            <button
+              onClick={handleToggleAudio}
+              className="btn-secondary"
+              style={{
+                padding: '0.45rem 0.85rem',
+                fontSize: '0.85rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                borderColor: isMuted ? 'var(--border-subtle)' : 'var(--accent-gold)'
+              }}
+              title={isMuted ? 'Unmute Sound Effects' : 'Mute Sound Effects'}
+            >
+              <span>{isMuted ? '🔇' : '🔊'}</span>
+              <span style={{ fontSize: '0.75rem', color: isMuted ? 'var(--text-muted)' : 'var(--accent-yellow)' }}>
+                {isMuted ? 'Muted' : 'Sound ON'}
+              </span>
+            </button>
+
             {currentUser ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -231,7 +281,7 @@ export default function App() {
                   }}>
                     <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: 'var(--accent-emerald)' }}></span>
                     <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--accent-yellow)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                      Day 9 Milestone: Banana Math Engine & Numpad Active
+                      Day 10 Milestone: Custom EventBus & Web Audio API Active
                     </span>
                   </div>
 
@@ -283,8 +333,8 @@ export default function App() {
                       },
                       {
                         theme: 'Theme 2: Event-Driven Programming',
-                        badge: 'Reactive DOM & Timer',
-                        desc: 'Hardware numpad & keyboard event binding, 60 FPS requestAnimationFrame tick loop, and decoupled state signals.',
+                        badge: 'Custom EventBus & Web Audio',
+                        desc: 'Decoupled pub/sub event bus, synthesized Web Audio API sound effects, and 60 FPS requestAnimationFrame tick loop.',
                         color: 'var(--accent-purple)'
                       },
                       {
@@ -422,11 +472,67 @@ export default function App() {
             {activeTab === 'architecture' && (
               <div>
                 <h2 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '0.5rem' }}>
-                  Enterprise Architecture & Interoperability
+                  Enterprise Architecture & Diagnostics
                 </h2>
                 <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>
-                  CIS046-3 System architecture diagram, cryptographic HMAC security tokenization, and live API telemetry.
+                  Live architectural introspection verifying Theme 2 (Event-Driven Programming) and Theme 3 (Interoperability).
                 </p>
+
+                {/* Theme 2: Custom Event Bus Activity Inspector */}
+                <div className="glass-panel" style={{ padding: '1.5rem', marginBottom: '2rem', borderTop: '4px solid var(--accent-purple)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                    <div>
+                      <h4 style={{ fontSize: '1.2rem', fontWeight: 800, margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <span>⚡</span> Theme 2: Decoupled CustomEventBus Signal Stream
+                      </h4>
+                      <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: '0.25rem 0 0 0' }}>
+                        Real-time audit log of published and subscribed events across the gameplay engine and Web Audio synthesizer.
+                      </p>
+                    </div>
+
+                    <button
+                      onClick={() => setBusEvents(eventBus.getHistory())}
+                      className="btn-secondary"
+                      style={{ padding: '0.35rem 0.8rem', fontSize: '0.75rem' }}
+                    >
+                      🔄 Refresh Stream
+                    </button>
+                  </div>
+
+                  <div style={{
+                    maxHeight: '220px',
+                    overflowY: 'auto',
+                    background: 'rgba(0,0,0,0.3)',
+                    borderRadius: 'var(--radius-md)',
+                    padding: '0.75rem',
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.8rem',
+                    border: '1px solid var(--border-subtle)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.4rem'
+                  }}>
+                    {busEvents.length === 0 ? (
+                      <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '1.5rem 0' }}>
+                        No events dispatched yet. Play a game or press numpad keys to observe live pub/sub messages!
+                      </div>
+                    ) : (
+                      busEvents.map((ev, index) => (
+                        <div key={index} style={{ display: 'flex', gap: '1rem', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.04)', paddingBottom: '0.25rem' }}>
+                          <span style={{ color: 'var(--text-muted)', fontSize: '0.7rem' }}>
+                            {new Date(ev.timestamp).toLocaleTimeString()}
+                          </span>
+                          <span style={{ color: 'var(--accent-purple)', fontWeight: 700 }}>
+                            {ev.event}
+                          </span>
+                          <span style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+                            {ev.payload ? JSON.stringify(ev.payload) : '∅'}
+                          </span>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
 
                 <div style={{
                   display: 'grid',
@@ -435,7 +541,7 @@ export default function App() {
                   marginBottom: '2rem'
                 }}>
                   {/* Live Banana API Telemetry Widget */}
-                  <div className="glass-panel" style={{ padding: '1.5rem' }}>
+                  <div className="glass-panel" style={{ padding: '1.5rem', borderTop: '4px solid var(--accent-gold)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                       <h4 style={{ fontSize: '1.1rem', fontWeight: 700 }}>🍌 Remote Banana API Health</h4>
                       <button
@@ -463,7 +569,7 @@ export default function App() {
                   </div>
 
                   {/* Cryptographic Protection Card */}
-                  <div className="glass-panel" style={{ padding: '1.5rem' }}>
+                  <div className="glass-panel" style={{ padding: '1.5rem', borderTop: '4px solid var(--accent-emerald)' }}>
                     <h4 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '0.75rem' }}>
                       🔐 HMAC-SHA256 Solution Sealing
                     </h4>
