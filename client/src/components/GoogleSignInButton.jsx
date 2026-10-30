@@ -67,6 +67,10 @@ export default function GoogleSignInButton({ onAuthSuccess, onError }) {
         import.meta.env.VITE_GOOGLE_CLIENT_ID ||
         '189311461066-mtonmntvqngjmkquthg0753jqf2h9jif.apps.googleusercontent.com';
 
+      // Always clear any previous child nodes injected by GIS before re-rendering
+      if (buttonRef.current) {
+        buttonRef.current.innerHTML = '';
+      }
 
       if (!isGisInitialized) {
         window.google.accounts.id.initialize({
