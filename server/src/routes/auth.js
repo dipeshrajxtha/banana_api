@@ -231,4 +231,49 @@ router.get('/me', authenticateToken, async (req, res) => {
   });
 });
 
+/**
+ * @route POST /api/auth/guest
+ * @description Creates an ephemeral Guest virtual identity session with signed JWT
+ */
+router.post('/guest', async (req, res, next) => {
+  try {
+    const { guestNickname } = req.body;
+    const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+    const cleanedNick = guestNickname && guestNickname.trim().length >= 2
+      ? guestNickname.trim().substring(0, 16)
+      : `Guest_${randomSuffix}`;
+
+    const guestEmail = `guest_${Date.now()}_${randomSuffix}@bananaquest.local`;
+
+    // Create a virtual guest user record in SQLite
+    const user = await usersRepository.create({
+      email: guestEmail,
+      username: cleanedNick,
+      passwordHash: null,
+      authProvider: 'guest',
+      avatarUrl: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(cleanedNick)}`,
+      role: 'player'
+    });
+
+    const token = generateToken(user);
+    setAuthCookie(res, token);
+
+    await auditRepository.log({
+      userId: user.id,
+      action: 'LOGIN_GUEST',
+      ipAddress: req.ip,
+      details: { username: user.username, role: 'guest' }
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Guest session initialized',
+      user: sanitizeUser(user),
+      token
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 export default router;

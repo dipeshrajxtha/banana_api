@@ -1,8 +1,7 @@
 /**
  * @file App.jsx
  * @description Main application shell for Banana Quest (CIS046-3 Software For Enterprise).
- * Orchestrates navigation, game lifecycle, virtual identity auth, and theme diagnostic panels.
- * Integrates Theme 2 (Event-Driven Programming) via CustomEventBus and native Web Audio synthesizer.
+ * Orchestrates navigation, expanded arcade modes, virtual identity authentication, and dynamic leaderboard.
  * @module client/App
  * @author Dipesh Raj Shrestha
  * @reference Marc Conrad - https://marcconrad.com/uob/banana/doc.php
@@ -11,9 +10,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { GRADE_TIERS, GAME_MODES } from '@banana-quest/shared';
-import GoogleSignInButton from './components/GoogleSignInButton.jsx';
 import PuzzleArena from './components/PuzzleArena.jsx';
 import GameOverModal from './components/GameOverModal.jsx';
+import IdentityPromptModal from './components/IdentityPromptModal.jsx';
 import { soundService } from './services/soundService.js';
 import { eventBus } from './events/eventBus.js';
 
@@ -21,7 +20,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('welcome');
   const [currentUser, setCurrentUser] = useState(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [authError, setAuthError] = useState(null);
+  const [pendingGameMode, setPendingGameMode] = useState(null);
 
   // Audio & Event-Driven Engine State
   const [isMuted, setIsMuted] = useState(soundService.isMuted);
@@ -35,11 +34,15 @@ export default function App() {
   const [telemetryData, setTelemetryData] = useState(null);
   const [telemetryLoading, setTelemetryLoading] = useState(false);
 
+  // Global Leaderboard State
+  const [leaderboardMode, setLeaderboardMode] = useState(GAME_MODES.SPEED_RUSH);
+  const [leaderboardRows, setLeaderboardRows] = useState([]);
+  const [leaderboardLoading, setLeaderboardLoading] = useState(false);
+
   // Bind Web Audio API synthesizer to EventBus on mount
   useEffect(() => {
     soundService.bindToEventBus();
 
-    // Refresh event bus history periodically for Architecture inspector
     const interval = setInterval(() => {
       setBusEvents(eventBus.getHistory());
     }, 1000);
@@ -62,6 +65,28 @@ export default function App() {
       });
   }, []);
 
+  // Fetch leaderboard data when tab or selected mode changes
+  const fetchLeaderboard = async (mode = leaderboardMode) => {
+    try {
+      setLeaderboardLoading(true);
+      const res = await fetch(`/api/scores/leaderboard?mode=${mode}`);
+      if (res.ok) {
+        const data = await res.json();
+        setLeaderboardRows(data.leaderboard || []);
+      }
+    } catch (err) {
+      console.warn('Leaderboard fetch note:', err);
+    } finally {
+      setLeaderboardLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'leaderboard') {
+      fetchLeaderboard(leaderboardMode);
+    }
+  }, [activeTab, leaderboardMode]);
+
   const handleToggleAudio = () => {
     const nextState = soundService.toggleMute();
     setIsMuted(nextState);
@@ -76,7 +101,13 @@ export default function App() {
     }
   };
 
+  // Virtual Identity Gating: Must be signed in (Google or Guest) to play
   const handleStartGame = (mode) => {
+    if (!currentUser) {
+      setPendingGameMode(mode);
+      setShowAuthModal(true);
+      return;
+    }
     setGameOverStats(null);
     setActiveGameMode(mode);
   };
@@ -133,7 +164,7 @@ export default function App() {
 
           {/* Navigation Links */}
           <nav style={{ display: 'flex', gap: '0.5rem' }}>
-            {['welcome', 'modes', 'architecture', 'leaderboard'].map(tab => (
+            {['welcome', 'modes', 'leaderboard', 'architecture'].map(tab => (
               <button
                 key={tab}
                 onClick={() => {
@@ -208,7 +239,7 @@ export default function App() {
                   <div style={{ textAlign: 'left' }}>
                     <div style={{ fontSize: '0.85rem', fontWeight: 700 }}>{currentUser.username}</div>
                     <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
-                      {currentUser.authProvider === 'google' ? 'Google Account' : 'Local Player'}
+                      {currentUser.authProvider === 'google' ? 'Google Account' : 'Guest Identity'}
                     </div>
                   </div>
                 </div>
@@ -222,22 +253,13 @@ export default function App() {
                 </button>
               </div>
             ) : (
-              <>
-                <button
-                  onClick={() => setShowAuthModal(true)}
-                  className="btn-secondary"
-                  style={{ padding: '0.5rem 1.25rem', fontSize: '0.85rem' }}
-                >
-                  Sign In
-                </button>
-                <button
-                  onClick={() => setShowAuthModal(true)}
-                  className="btn-primary"
-                  style={{ padding: '0.5rem 1.25rem', fontSize: '0.85rem' }}
-                >
-                  Play with Google
-                </button>
-              </>
+              <button
+                onClick={() => setShowAuthModal(true)}
+                className="btn-primary"
+                style={{ padding: '0.5rem 1.25rem', fontSize: '0.85rem' }}
+              >
+                🔐 Sign In / Guest
+              </button>
             )}
           </div>
         </div>
@@ -281,7 +303,7 @@ export default function App() {
                   }}>
                     <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: 'var(--accent-emerald)' }}></span>
                     <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--accent-yellow)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                      Day 10 Milestone: Custom EventBus & Web Audio API Active
+                      CIS046-3 Enterprise Ready: 5 Arcade Modes Active
                     </span>
                   </div>
 
@@ -292,24 +314,31 @@ export default function App() {
                   <p style={{ maxWidth: '650px', margin: '0 auto 2rem auto', fontSize: '1.1rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
                     An enterprise, event-driven cognitive arcade game powered by the University of Bedfordshire Banana API.
                     {currentUser
-                      ? ` Welcome back, ${currentUser.username}! Ready to test your mathematical reflexes?`
-                      : ' Sign in with Google to record your high scores, earn Apex Legend rank, and challenge global solvers.'}
+                      ? ` Welcome, ${currentUser.username}! Ready to prove your mathematical reflexes?`
+                      : ' Sign in with Google or join as a Guest to record your high scores and climb the Global Hall of Fame.'}
                   </p>
 
                   <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', flexWrap: 'wrap' }}>
                     <button
                       onClick={() => handleStartGame(GAME_MODES.SPEED_RUSH)}
                       className="btn-primary"
-                      style={{ fontSize: '1.1rem', padding: '1rem 2rem' }}
+                      style={{ fontSize: '1.05rem', padding: '0.9rem 1.75rem' }}
                     >
-                      🚀 Start Speed Rush (60s)
+                      ⚡ Speed Rush (60s)
                     </button>
                     <button
                       onClick={() => handleStartGame(GAME_MODES.SURVIVAL)}
                       className="btn-secondary"
-                      style={{ fontSize: '1.1rem', padding: '1rem 1.75rem' }}
+                      style={{ fontSize: '1.05rem', padding: '0.9rem 1.75rem' }}
                     >
                       🛡️ Survival Mode (3 Strikes)
+                    </button>
+                    <button
+                      onClick={() => handleStartGame(GAME_MODES.STREAK_MASTER)}
+                      className="btn-secondary"
+                      style={{ fontSize: '1.05rem', padding: '0.9rem 1.75rem', borderColor: 'var(--accent-gold)', color: 'var(--accent-yellow)' }}
+                    >
+                      🎯 Perfect 10 Streak
                     </button>
                   </div>
                 </div>
@@ -345,8 +374,8 @@ export default function App() {
                       },
                       {
                         theme: 'Theme 4: Virtual Identity',
-                        badge: 'Google OAuth & JWT',
-                        desc: 'Federated identity via Google OpenID Connect, bcrypt password hashing, HttpOnly cookies, and RBAC.',
+                        badge: 'Google OAuth & Guest Auth',
+                        desc: 'Federated identity via Google OpenID Connect, Guest virtual identities, bcrypt password hashing, and HttpOnly cookies.',
                         color: 'var(--accent-emerald)'
                       }
                     ].map(item => (
@@ -412,14 +441,14 @@ export default function App() {
               </>
             )}
 
-            {/* Tab: Game Modes */}
+            {/* Tab: Game Modes (Expanded 5 Modes) */}
             {activeTab === 'modes' && (
               <div>
                 <h2 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '0.5rem' }}>
                   Select Arcade Challenge Mode
                 </h2>
                 <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>
-                  Choose your challenge parameters. All modes communicate in real time with the Marc Conrad Banana API.
+                  Choose your test parameter. All modes communicate live with Marc Conrad&apos;s Banana API.
                 </p>
 
                 <div style={{
@@ -427,7 +456,7 @@ export default function App() {
                   gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
                   gap: '1.5rem'
                 }}>
-                  {/* Speed Rush */}
+                  {/* Mode 1: Speed Rush */}
                   <div className="glass-panel" style={{ padding: '2rem', borderTop: '4px solid var(--accent-purple)' }}>
                     <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>⚡</div>
                     <h3 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '0.5rem' }}>Speed Rush</h3>
@@ -446,7 +475,7 @@ export default function App() {
                     </button>
                   </div>
 
-                  {/* Survival Mode */}
+                  {/* Mode 2: Survival Mode */}
                   <div className="glass-panel" style={{ padding: '2rem', borderTop: '4px solid var(--accent-rose)' }}>
                     <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🛡️</div>
                     <h3 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '0.5rem' }}>Survival Mode</h3>
@@ -464,6 +493,191 @@ export default function App() {
                       🛡️ Launch Survival
                     </button>
                   </div>
+
+                  {/* Mode 3: Perfect 10 Streak Master */}
+                  <div className="glass-panel" style={{ padding: '2rem', borderTop: '4px solid var(--accent-gold)' }}>
+                    <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🎯</div>
+                    <h3 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '0.5rem' }}>Perfect 10 Streak</h3>
+                    <div style={{ fontSize: '0.85rem', color: 'var(--accent-gold)', fontWeight: 700, marginBottom: '1rem' }}>
+                      1 Life • Flawless 10-Win Target
+                    </div>
+                    <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '1.5rem' }}>
+                      High-stakes precision run. You have only 1 life. Achieve 10 consecutive correct answers to conquer this trial. One single mistake ends the run!
+                    </p>
+                    <button
+                      onClick={() => handleStartGame(GAME_MODES.STREAK_MASTER)}
+                      className="btn-secondary"
+                      style={{ width: '100%', padding: '0.85rem', borderColor: 'var(--accent-gold)', color: 'var(--accent-gold)' }}
+                    >
+                      🎯 Launch Perfect 10
+                    </button>
+                  </div>
+
+                  {/* Mode 4: Time Attack Sprint */}
+                  <div className="glass-panel" style={{ padding: '2rem', borderTop: '4px solid var(--accent-cyan)' }}>
+                    <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>⏱️</div>
+                    <h3 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '0.5rem' }}>Time Attack</h3>
+                    <div style={{ fontSize: '0.85rem', color: 'var(--accent-cyan)', fontWeight: 700, marginBottom: '1rem' }}>
+                      90s Max • Solve 10 Equations Fast
+                    </div>
+                    <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '1.5rem' }}>
+                      A rapid 10-puzzle sprint against the clock. Solve all 10 equations as quickly as possible to maximize your lightning speed bonuses and achieve S-Tier rank!
+                    </p>
+                    <button
+                      onClick={() => handleStartGame(GAME_MODES.TIME_ATTACK)}
+                      className="btn-secondary"
+                      style={{ width: '100%', padding: '0.85rem', borderColor: 'var(--accent-cyan)', color: 'var(--accent-cyan)' }}
+                    >
+                      ⏱️ Launch Time Attack
+                    </button>
+                  </div>
+
+                  {/* Mode 5: Zen Practice */}
+                  <div className="glass-panel" style={{ padding: '2rem', borderTop: '4px solid var(--accent-emerald)' }}>
+                    <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🧘</div>
+                    <h3 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '0.5rem' }}>Zen Practice</h3>
+                    <div style={{ fontSize: '0.85rem', color: 'var(--accent-emerald)', fontWeight: 700, marginBottom: '1rem' }}>
+                      Casual • Unlimited Lives & Time
+                    </div>
+                    <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '1.5rem' }}>
+                      Relaxed mathematical training. Unlimited puzzles, no timers, and no penalties. Ideal for warming up mental calculation reflexes or learning the equation patterns.
+                    </p>
+                    <button
+                      onClick={() => handleStartGame(GAME_MODES.PRACTICE)}
+                      className="btn-secondary"
+                      style={{ width: '100%', padding: '0.85rem', borderColor: 'var(--accent-emerald)', color: 'var(--accent-emerald)' }}
+                    >
+                      🧘 Enter Zen Practice
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Tab: Global Hall of Fame / Leaderboard */}
+            {activeTab === 'leaderboard' && (
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+                  <div>
+                    <h2 style={{ fontSize: '2rem', fontWeight: 800, margin: 0 }}>
+                      Global Hall of Fame
+                    </h2>
+                    <p style={{ color: 'var(--text-secondary)', margin: '0.25rem 0 0 0' }}>
+                      Top competitive solvers ranked in real time by high score, accuracy, and tier classification.
+                    </p>
+                  </div>
+
+                  {/* Mode Filter Selector */}
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    {[
+                      { id: GAME_MODES.SPEED_RUSH, label: 'Speed Rush' },
+                      { id: GAME_MODES.SURVIVAL, label: 'Survival' },
+                      { id: GAME_MODES.STREAK_MASTER, label: 'Perfect 10' },
+                      { id: GAME_MODES.TIME_ATTACK, label: 'Time Attack' }
+                    ].map(m => (
+                      <button
+                        key={m.id}
+                        onClick={() => {
+                          setLeaderboardMode(m.id);
+                          fetchLeaderboard(m.id);
+                        }}
+                        className="btn-secondary"
+                        style={{
+                          padding: '0.4rem 0.85rem',
+                          fontSize: '0.8rem',
+                          borderRadius: 'var(--radius-sm)',
+                          background: leaderboardMode === m.id ? 'var(--accent-gold)' : 'transparent',
+                          color: leaderboardMode === m.id ? '#000' : 'var(--text-secondary)',
+                          borderColor: leaderboardMode === m.id ? 'var(--accent-yellow)' : 'var(--border-subtle)'
+                        }}
+                      >
+                        {m.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="glass-panel" style={{ padding: '1.5rem', overflowX: 'auto' }}>
+                  {leaderboardLoading ? (
+                    <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
+                      Loading verified leaderboard rankings...
+                    </div>
+                  ) : leaderboardRows.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
+                      <span style={{ fontSize: '3rem' }}>🏆</span>
+                      <h3 style={{ fontSize: '1.25rem', marginTop: '0.75rem', marginBottom: '0.5rem', color: 'var(--text-primary)' }}>
+                        No Verified High Scores in {leaderboardMode} Yet!
+                      </h3>
+                      <p style={{ fontSize: '0.9rem', maxWidth: '480px', margin: '0 auto 1.5rem auto' }}>
+                        Be the first solver to set a record in this mode and claim the #1 spot on the podium.
+                      </p>
+                      <button
+                        onClick={() => handleStartGame(leaderboardMode)}
+                        className="btn-primary"
+                        style={{ padding: '0.75rem 1.5rem' }}
+                      >
+                        Play Now to Claim #1
+                      </button>
+                    </div>
+                  ) : (
+                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
+                      <thead>
+                        <tr style={{ borderBottom: '1px solid var(--border-subtle)', color: 'var(--text-muted)' }}>
+                          <th style={{ padding: '0.75rem 1rem' }}>Rank</th>
+                          <th style={{ padding: '0.75rem 1rem' }}>Player</th>
+                          <th style={{ padding: '0.75rem 1rem' }}>Tier</th>
+                          <th style={{ padding: '0.75rem 1rem' }}>High Score</th>
+                          <th style={{ padding: '0.75rem 1rem' }}>Accuracy</th>
+                          <th style={{ padding: '0.75rem 1rem' }}>Avg Speed</th>
+                          <th style={{ padding: '0.75rem 1rem' }}>Verified At</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {leaderboardRows.map((row) => (
+                          <tr key={row.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                            <td style={{ padding: '1rem', fontWeight: 800, fontFamily: 'var(--font-mono)' }}>
+                              {row.rank === 1 ? '🥇 #1' : row.rank === 2 ? '🥈 #2' : row.rank === 3 ? '🥉 #3' : `#${row.rank}`}
+                            </td>
+                            <td style={{ padding: '1rem' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                {row.avatar_url ? (
+                                  <img src={row.avatar_url} alt="" style={{ width: '28px', height: '28px', borderRadius: '50%' }} />
+                                ) : (
+                                  <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'var(--accent-gold)', color: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>
+                                    {row.username.charAt(0)}
+                                  </div>
+                                )}
+                                <span style={{ fontWeight: 700 }}>{row.username}</span>
+                              </div>
+                            </td>
+                            <td style={{ padding: '1rem' }}>
+                              <span style={{
+                                fontWeight: 800,
+                                padding: '0.2rem 0.6rem',
+                                borderRadius: 'var(--radius-sm)',
+                                background: 'rgba(255,255,255,0.06)',
+                                color: row.grade_tier === 'S' ? '#FFD700' : row.grade_tier === 'A' ? '#A855F7' : 'var(--text-primary)'
+                              }}>
+                                {row.grade_tier}
+                              </span>
+                            </td>
+                            <td style={{ padding: '1rem', fontWeight: 900, fontFamily: 'var(--font-mono)', color: 'var(--accent-yellow)' }}>
+                              {row.high_score.toLocaleString()}
+                            </td>
+                            <td style={{ padding: '1rem', fontFamily: 'var(--font-mono)' }}>
+                              {row.best_accuracy_pct}%
+                            </td>
+                            <td style={{ padding: '1rem', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>
+                              {(row.best_avg_time_ms / 1000).toFixed(1)}s
+                            </td>
+                            <td style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.8rem' }}>
+                              {new Date(row.updated_at).toLocaleDateString()}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
                 </div>
               </div>
             )}
@@ -580,45 +794,15 @@ export default function App() {
                 </div>
               </div>
             )}
-
-            {/* Tab: Leaderboard */}
-            {activeTab === 'leaderboard' && (
-              <div>
-                <h2 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '0.5rem' }}>
-                  Global Hall of Fame
-                </h2>
-                <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>
-                  Top competitive solvers ranked by high score, accuracy, and tier classification.
-                </p>
-
-                <div className="glass-panel" style={{ padding: '1.5rem' }}>
-                  <div style={{ textAlign: 'center', padding: '2rem 1rem', color: 'var(--text-muted)' }}>
-                    <span style={{ fontSize: '3rem' }}>🏆</span>
-                    <h3 style={{ fontSize: '1.25rem', marginTop: '0.75rem', marginBottom: '0.5rem', color: 'var(--text-primary)' }}>
-                      Complete a Game Session to Claim Your Rank!
-                    </h3>
-                    <p style={{ fontSize: '0.9rem', maxWidth: '500px', margin: '0 auto 1.5rem auto' }}>
-                      Start a Speed Rush or Survival game to record your score. Top scores will automatically register in the SQLite persistent ledger.
-                    </p>
-                    <button
-                      onClick={() => handleStartGame(GAME_MODES.SPEED_RUSH)}
-                      className="btn-primary"
-                      style={{ padding: '0.75rem 1.5rem' }}
-                    >
-                      Play Now
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
           </>
         )}
       </main>
 
-      {/* Game Over Modal with Grade Tier Diagnostics */}
+      {/* Game Over Modal with Grade Tier Diagnostics & Score Auto-Recording */}
       {gameOverStats && (
         <GameOverModal
           stats={gameOverStats}
+          currentUser={currentUser}
           onPlayAgain={() => {
             const mode = gameOverStats.gameMode;
             setGameOverStats(null);
@@ -631,75 +815,18 @@ export default function App() {
         />
       )}
 
-      {/* Virtual Identity Authentication Modal */}
-      {showAuthModal && (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          background: 'rgba(0, 0, 0, 0.75)',
-          backdropFilter: 'blur(8px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 100,
-          padding: '1rem'
-        }}>
-          <div className="glass-panel" style={{
-            maxWidth: '440px',
-            width: '100%',
-            padding: '2rem',
-            textAlign: 'center',
-            position: 'relative'
-          }}>
-            <button
-              onClick={() => setShowAuthModal(false)}
-              style={{
-                position: 'absolute',
-                top: '1rem',
-                right: '1rem',
-                background: 'transparent',
-                border: 'none',
-                color: 'var(--text-muted)',
-                fontSize: '1.25rem',
-                cursor: 'pointer'
-              }}
-            >
-              ✕
-            </button>
-
-            <span style={{ fontSize: '2.5rem' }}>🔐</span>
-            <h3 style={{ fontSize: '1.5rem', marginTop: '0.5rem', marginBottom: '0.5rem' }}>
-              Player Virtual Identity
-            </h3>
-            <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
-              Sign in with your Google account or academic demo profile to track your scores.
-            </p>
-
-            {authError && (
-              <div style={{
-                background: 'rgba(244, 63, 94, 0.1)',
-                border: '1px solid var(--accent-rose)',
-                padding: '0.75rem',
-                borderRadius: 'var(--radius-sm)',
-                color: 'var(--accent-rose)',
-                fontSize: '0.85rem',
-                marginBottom: '1rem'
-              }}>
-                {authError}
-              </div>
-            )}
-
-            <GoogleSignInButton
-              onAuthSuccess={(user) => {
-                setCurrentUser(user);
-                setShowAuthModal(false);
-                setAuthError(null);
-              }}
-              onError={(err) => setAuthError(err)}
-            />
-          </div>
-        </div>
-      )}
+      {/* Virtual Identity Gating Modal */}
+      <IdentityPromptModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onAuthSuccess={(user) => {
+          setCurrentUser(user);
+          if (pendingGameMode) {
+            setActiveGameMode(pendingGameMode);
+            setPendingGameMode(null);
+          }
+        }}
+      />
 
       {/* Footer */}
       <footer style={{

@@ -1,15 +1,18 @@
 /**
  * @file GameOverModal.jsx
- * @description High-impact arcade recap modal displaying grade tiers (S/A/B/C/D), score telemetry, and replay controls.
+ * @description High-impact arcade recap modal displaying grade tiers (S/A/B/C/D), score telemetry,
+ * leaderboard high-score submission feedback, and replay controls.
  * @module client/components/GameOverModal
  * @author Dipesh Raj Shrestha
  * @reference University of Bedfordshire - CIS046-3 Software For Enterprise
  */
 
-import React from 'react';
-import { evaluatePlayerGrade } from '@banana-quest/shared';
+import React, { useEffect, useState } from 'react';
+import { evaluatePlayerGrade, GAME_MODES } from '@banana-quest/shared';
 
-export default function GameOverModal({ stats, onPlayAgain, onReturnHome }) {
+export default function GameOverModal({ stats, currentUser, onPlayAgain, onReturnHome }) {
+  const [submissionStatus, setSubmissionStatus] = useState(null);
+
   if (!stats) return null;
 
   const {
@@ -24,6 +27,58 @@ export default function GameOverModal({ stats, onPlayAgain, onReturnHome }) {
 
   const grade = evaluatePlayerGrade(totalScore, accuracyPct, avgSolveTimeMs);
   const avgSeconds = (avgSolveTimeMs / 1000).toFixed(1);
+
+  // Auto-submit score to SQLite backend if user has an active identity (Google or Guest)
+  useEffect(() => {
+    let isMounted = true;
+
+    async function recordSession() {
+      try {
+        const res = await fetch('/api/scores/submit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            gameMode,
+            totalScore,
+            puzzlesAttempted,
+            puzzlesSolved,
+            accuracyPct,
+            avgSolveTimeMs,
+            maxStreak
+          })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (isMounted) {
+            setSubmissionStatus({
+              recorded: true,
+              isNewHighScore: data.isNewHighScore,
+              highScore: data.currentHighScore
+            });
+          }
+        }
+      } catch (err) {
+        console.warn('[GameOver] Score submission note:', err.message);
+      }
+    }
+
+    if (currentUser) {
+      recordSession();
+    }
+
+    return () => { isMounted = false; };
+  }, [currentUser, gameMode, totalScore, puzzlesAttempted, puzzlesSolved, accuracyPct, avgSolveTimeMs, maxStreak]);
+
+  const getModeTitle = () => {
+    switch (gameMode) {
+      case GAME_MODES.SPEED_RUSH: return '⚡ SPEED RUSH SESSION RECAP';
+      case GAME_MODES.SURVIVAL: return '🛡️ SURVIVAL SESSION RECAP';
+      case GAME_MODES.STREAK_MASTER: return '🎯 PERFECT 10 SESSION RECAP';
+      case GAME_MODES.TIME_ATTACK: return '⏱️ TIME ATTACK SESSION RECAP';
+      case GAME_MODES.PRACTICE: return '🧘 ZEN PRACTICE SESSION RECAP';
+      default: return `${gameMode} SESSION RECAP`;
+    }
+  };
 
   return (
     <div style={{
@@ -59,7 +114,7 @@ export default function GameOverModal({ stats, onPlayAgain, onReturnHome }) {
           marginBottom: '1rem'
         }}>
           <span style={{ fontSize: '0.85rem', fontWeight: 800, color: grade.badgeColor, letterSpacing: '0.05em' }}>
-            {gameMode === 'SPEED_RUSH' ? '⚡ SPEED RUSH SESSION RECAP' : '🛡️ SURVIVAL SESSION RECAP'}
+            {getModeTitle()}
           </span>
         </div>
 
@@ -76,12 +131,30 @@ export default function GameOverModal({ stats, onPlayAgain, onReturnHome }) {
           {grade.id}
         </div>
 
-        <h3 style={{ fontSize: '1.75rem', fontWeight: 800, margin: '0 0 0.5rem 0' }}>
+        <h3 style={{ fontSize: '1.75rem', fontWeight: 800, margin: '0 0 0.25rem 0' }}>
           {grade.name}
         </h3>
-        <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '2rem' }}>
+        <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
           {grade.description}
         </p>
+
+        {/* Leaderboard High Score Banner */}
+        {submissionStatus && (
+          <div style={{
+            background: submissionStatus.isNewHighScore ? 'rgba(245, 158, 11, 0.15)' : 'rgba(16, 185, 129, 0.15)',
+            border: `1px solid ${submissionStatus.isNewHighScore ? 'var(--accent-gold)' : 'var(--accent-emerald)'}`,
+            borderRadius: 'var(--radius-sm)',
+            padding: '0.5rem 1rem',
+            fontSize: '0.85rem',
+            fontWeight: 700,
+            color: submissionStatus.isNewHighScore ? 'var(--accent-yellow)' : 'var(--accent-emerald)',
+            marginBottom: '1.5rem'
+          }}>
+            {submissionStatus.isNewHighScore
+              ? `🏆 NEW PERSONAL HIGH SCORE! Recorded to Global Hall of Fame.`
+              : `✓ Score verified & saved to player match history.`}
+          </div>
+        )}
 
         {/* Telemetry Stats Grid */}
         <div style={{

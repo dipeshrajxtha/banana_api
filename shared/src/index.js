@@ -10,9 +10,11 @@
  * Supported Game Modes
  */
 export const GAME_MODES = {
-  SPEED_RUSH: 'SPEED_RUSH', // 60s timed sprint
-  SURVIVAL: 'SURVIVAL',     // 3 lives, unlimited time (strike-out)
-  PRACTICE: 'PRACTICE'      // Casual 10-puzzle run
+  SPEED_RUSH: 'SPEED_RUSH',   // 60s timed sprint
+  SURVIVAL: 'SURVIVAL',       // 3 lives, unlimited time (strike-out)
+  STREAK_MASTER: 'STREAK_MASTER', // Perfect 10: 1 life, reach 10 correct answers
+  TIME_ATTACK: 'TIME_ATTACK', // 10-puzzle speed sprint (fastest total clear time)
+  PRACTICE: 'PRACTICE'        // Zen / Practice: Casual unlimited puzzles, no penalty
 };
 
 /**
