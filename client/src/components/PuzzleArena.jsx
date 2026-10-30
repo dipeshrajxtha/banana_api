@@ -2,6 +2,7 @@
  * @file PuzzleArena.jsx
  * @description Main interactive game arena rendering Banana API math puzzles, timer, and reactive inputs.
  * Deeply integrates with CustomEventBus to decouple gameplay signals, audio, and HUD diagnostics.
+ * Supports multiple distinct challenge modes: SPEED_RUSH, SURVIVAL, STREAK_MASTER, TIME_ATTACK, and PRACTICE.
  * @module client/components/PuzzleArena
  * @author Dipesh Raj Shrestha
  * @reference Marc Conrad - https://marcconrad.com/uob/banana/doc.php
@@ -9,12 +10,12 @@
  */
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { GAME_EVENTS } from '@banana-quest/shared';
+import { GAME_EVENTS, GAME_MODES } from '@banana-quest/shared';
 import Numpad from './Numpad.jsx';
 import { useGameTimer } from '../hooks/useGameTimer.js';
 import { eventBus } from '../events/eventBus.js';
 
-export default function PuzzleArena({ gameMode = 'SPEED_RUSH', onGameOver, onQuit }) {
+export default function PuzzleArena({ gameMode = GAME_MODES.SPEED_RUSH, onGameOver, onQuit }) {
   // Game State
   const [currentPuzzle, setCurrentPuzzle] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -24,7 +25,14 @@ export default function PuzzleArena({ gameMode = 'SPEED_RUSH', onGameOver, onQui
   const [maxStreak, setMaxStreak] = useState(0);
   const [solvedCount, setSolvedCount] = useState(0);
   const [attemptedCount, setAttemptedCount] = useState(0);
-  const [lives, setLives] = useState(gameMode === 'SURVIVAL' ? 3 : null);
+
+  // Lives setup depending on mode
+  const initialLives = gameMode === GAME_MODES.SURVIVAL
+    ? 3
+    : gameMode === GAME_MODES.STREAK_MASTER
+      ? 1
+      : null;
+  const [lives, setLives] = useState(initialLives);
   const [feedback, setFeedback] = useState(null); // { type: 'correct' | 'wrong', message, points }
 
   // High-precision response time tracker
@@ -37,7 +45,7 @@ export default function PuzzleArena({ gameMode = 'SPEED_RUSH', onGameOver, onQui
   const maxStreakRef = useRef(0);
   const solvedCountRef = useRef(0);
   const attemptedCountRef = useRef(0);
-  const livesRef = useRef(gameMode === 'SURVIVAL' ? 3 : null);
+  const livesRef = useRef(initialLives);
   const finishGameRef = useRef(null);
 
   // Keep refs synchronized with state
@@ -48,19 +56,26 @@ export default function PuzzleArena({ gameMode = 'SPEED_RUSH', onGameOver, onQui
   attemptedCountRef.current = attemptedCount;
   livesRef.current = lives;
 
-  // Game Mode Configuration
-  const isSpeedRush = gameMode === 'SPEED_RUSH';
-  const speedRushDurationMs = 60000;
+  // Game Mode Configurations
+  const isSpeedRush = gameMode === GAME_MODES.SPEED_RUSH;
+  const isTimeAttack = gameMode === GAME_MODES.TIME_ATTACK;
+  const isStreakMaster = gameMode === GAME_MODES.STREAK_MASTER;
+  const isSurvival = gameMode === GAME_MODES.SURVIVAL;
+  const isPractice = gameMode === GAME_MODES.PRACTICE;
+
+  // Timed modes configuration
+  const durationMs = isSpeedRush ? 60000 : isTimeAttack ? 90000 : 0;
+  const hasTimer = isSpeedRush || isTimeAttack;
 
   // Timer callback delegates to finishGameRef to avoid TDZ circularity
   const handleTimeout = useCallback(() => {
-    if (isSpeedRush && finishGameRef.current) {
+    if (hasTimer && finishGameRef.current) {
       finishGameRef.current();
     }
-  }, [isSpeedRush]);
+  }, [hasTimer]);
 
   const timer = useGameTimer({
-    warningThresholdMs: 4000,
+    warningThresholdMs: 5000,
     onTimeout: handleTimeout
   });
 
@@ -129,8 +144,8 @@ export default function PuzzleArena({ gameMode = 'SPEED_RUSH', onGameOver, onQui
   useEffect(() => {
     eventBus.emit(GAME_EVENTS.GAME_STARTED, { gameMode });
     fetchNextPuzzle();
-    if (isSpeedRush) {
-      timer.start(speedRushDurationMs);
+    if (hasTimer) {
+      timer.start(durationMs);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -202,6 +217,23 @@ export default function PuzzleArena({ gameMode = 'SPEED_RUSH', onGameOver, onQui
           points
         });
 
+        // Mode Win / Progression Triggers
+        if (isStreakMaster && nextSolved >= 10) {
+          // Player achieved Perfect 10 Streak Master
+          setTimeout(() => {
+            if (finishGameRef.current) finishGameRef.current();
+          }, 850);
+          return;
+        }
+
+        if (isTimeAttack && nextSolved >= 10) {
+          // Completed 10-puzzle Time Attack Sprint
+          setTimeout(() => {
+            if (finishGameRef.current) finishGameRef.current();
+          }, 850);
+          return;
+        }
+
         // Auto transition to next puzzle after positive feedback
         setTimeout(() => {
           fetchNextPuzzle();
@@ -219,8 +251,9 @@ export default function PuzzleArena({ gameMode = 'SPEED_RUSH', onGameOver, onQui
           message: `INCORRECT! (Correct Answer: ${result.trueSolution})`
         });
 
-        if (gameMode === 'SURVIVAL') {
-          const nextLives = livesRef.current - 1;
+        // Failure handling per mode
+        if (isSurvival || isStreakMaster) {
+          const nextLives = (livesRef.current ?? 1) - 1;
           livesRef.current = nextLives;
           setLives(nextLives);
           eventBus.emit(GAME_EVENTS.LIFE_LOST, { livesRemaining: nextLives });
@@ -241,7 +274,7 @@ export default function PuzzleArena({ gameMode = 'SPEED_RUSH', onGameOver, onQui
       console.error('[PuzzleArena] Verification error:', err);
       setLoading(false);
     }
-  }, [selectedDigit, currentPuzzle, loading, gameMode, fetchNextPuzzle]);
+  }, [selectedDigit, currentPuzzle, loading, isStreakMaster, isTimeAttack, isSurvival, fetchNextPuzzle]);
 
   // Reactive DOM Keyboard Listener (Theme 2: Event-Driven Programming)
   useEffect(() => {
@@ -271,6 +304,29 @@ export default function PuzzleArena({ gameMode = 'SPEED_RUSH', onGameOver, onQui
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [loading, handleSubmitAnswer, onQuit]);
+
+  // Mode Display Name Helper
+  const getModeLabel = () => {
+    switch (gameMode) {
+      case GAME_MODES.SPEED_RUSH: return '⚡ SPEED RUSH';
+      case GAME_MODES.SURVIVAL: return '🛡️ SURVIVAL';
+      case GAME_MODES.STREAK_MASTER: return '🎯 PERFECT 10';
+      case GAME_MODES.TIME_ATTACK: return '⏱️ TIME ATTACK';
+      case GAME_MODES.PRACTICE: return '🧘 ZEN PRACTICE';
+      default: return gameMode;
+    }
+  };
+
+  const getModeColor = () => {
+    switch (gameMode) {
+      case GAME_MODES.SPEED_RUSH: return 'var(--accent-purple)';
+      case GAME_MODES.SURVIVAL: return 'var(--accent-rose)';
+      case GAME_MODES.STREAK_MASTER: return 'var(--accent-gold)';
+      case GAME_MODES.TIME_ATTACK: return 'var(--accent-cyan)';
+      case GAME_MODES.PRACTICE: return 'var(--accent-emerald)';
+      default: return 'var(--accent-yellow)';
+    }
+  };
 
   return (
     <div className="glass-panel" style={{
@@ -328,45 +384,46 @@ export default function PuzzleArena({ gameMode = 'SPEED_RUSH', onGameOver, onQui
             fontWeight: 800,
             padding: '0.25rem 0.75rem',
             borderRadius: 'var(--radius-full)',
-            background: isSpeedRush ? 'rgba(139, 92, 246, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-            color: isSpeedRush ? 'var(--accent-purple)' : 'var(--accent-rose)',
-            border: `1px solid ${isSpeedRush ? 'rgba(139, 92, 246, 0.4)' : 'rgba(239, 68, 68, 0.4)'}`
+            background: 'rgba(255, 255, 255, 0.05)',
+            color: getModeColor(),
+            border: `1px solid ${getModeColor()}`
           }}>
-            {isSpeedRush ? '⚡ SPEED RUSH' : '🛡️ SURVIVAL'}
+            {getModeLabel()}
           </span>
           <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
-            Solved: <strong>{solvedCount}</strong> / {attemptedCount}
+            Solved: <strong>{solvedCount}</strong>
+            {isStreakMaster || isTimeAttack ? ' / 10 Goal' : ` / ${attemptedCount}`}
           </div>
         </div>
 
         {/* Right: Lives / Timer & Quit */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
-          {/* Hearts for Survival Mode */}
+          {/* Hearts Indicator */}
           {lives !== null && (
             <div style={{ display: 'flex', gap: '0.25rem', fontSize: '1.25rem' }}>
-              {[1, 2, 3].map((heart) => (
-                <span key={heart} style={{ opacity: heart <= lives ? 1 : 0.2 }}>
+              {Array.from({ length: initialLives || 1 }).map((_, i) => (
+                <span key={i} style={{ opacity: i < lives ? 1 : 0.2 }}>
                   ❤️
                 </span>
               ))}
             </div>
           )}
 
-          {/* Countdown Clock (Speed Rush) or Unlimited Indicator (Survival) */}
+          {/* Clock or Mode Condition */}
           <div style={{ textAlign: 'right' }}>
             <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-              {isSpeedRush ? 'Time Left' : 'Time Limit'}
+              {hasTimer ? 'Time Left' : 'Time Limit'}
             </div>
             <div style={{
               fontSize: '1.75rem',
               fontWeight: 900,
               fontFamily: 'var(--font-mono)',
-              color: isSpeedRush
+              color: hasTimer
                 ? (timer.isWarning ? 'var(--accent-rose)' : 'var(--text-primary)')
                 : 'var(--accent-emerald)',
-              animation: isSpeedRush && timer.isWarning ? 'pulse 0.8s infinite' : 'none'
+              animation: hasTimer && timer.isWarning ? 'pulse 0.8s infinite' : 'none'
             }}>
-              {isSpeedRush ? `${timer.secondsRemaining}s` : '∞ Untimed'}
+              {hasTimer ? `${timer.secondsRemaining}s` : '∞ Untimed'}
             </div>
           </div>
 
@@ -380,8 +437,8 @@ export default function PuzzleArena({ gameMode = 'SPEED_RUSH', onGameOver, onQui
         </div>
       </div>
 
-      {/* Timer Progress Bar (Speed Rush Only) */}
-      {isSpeedRush && (
+      {/* Timer Progress Bar (Timed Modes Only) */}
+      {hasTimer && (
         <div style={{
           width: '100%',
           height: '6px',
