@@ -1,7 +1,6 @@
 {
   "name": "@banana-quest/client",
   "version": "0.3.0",
-
   "private": true,
   "type": "module",
   "scripts": {
@@ -11,9 +10,14 @@
   },
   "dependencies": {
     "@banana-quest/shared": "*",
+    "@react-three/drei": "^9.122.0",
+    "@react-three/fiber": "^8.18.0",
+    "canvas-confetti": "^1.9.4",
+    "framer-motion": "^14.9.0",
     "lucide-react": "^0.395.0",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "three": "^0.185.1"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.1",

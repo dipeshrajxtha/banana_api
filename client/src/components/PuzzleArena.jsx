@@ -1,6 +1,8 @@
 /**
  * @file PuzzleArena.jsx
- * @description Main interactive game arena rendering Banana API math puzzles, timer, and reactive inputs.
+ * @description Main interactive game arena with Modern Arcade HUD Overhaul.
+ * Features Framer Motion animations, glowing arcade stat cards, animated timer arc,
+ * confetti bursts, screen shake, floating score popups, and tactile 3D-press buttons.
  * Deeply integrates with CustomEventBus to decouple gameplay signals, audio, and HUD diagnostics.
  * Supports multiple distinct challenge modes: SPEED_RUSH, SURVIVAL, STREAK_MASTER, TIME_ATTACK, and PRACTICE.
  * @module client/components/PuzzleArena
@@ -10,8 +12,11 @@
  */
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import confetti from 'canvas-confetti';
 import { GAME_EVENTS, GAME_MODES } from '@banana-quest/shared';
 import Numpad from './Numpad.jsx';
+import FloatingPoints from './FloatingPoints.jsx';
 import { useGameTimer } from '../hooks/useGameTimer.js';
 import { eventBus } from '../events/eventBus.js';
 
@@ -25,6 +30,10 @@ export default function PuzzleArena({ gameMode = GAME_MODES.SPEED_RUSH, onGameOv
   const [maxStreak, setMaxStreak] = useState(0);
   const [solvedCount, setSolvedCount] = useState(0);
   const [attemptedCount, setAttemptedCount] = useState(0);
+
+  // Animation state
+  const [shaking, setShaking] = useState(false);
+  const [pointsTrigger, setPointsTrigger] = useState(null);
 
   // Lives setup depending on mode
   const initialLives = gameMode === GAME_MODES.SURVIVAL
@@ -150,6 +159,22 @@ export default function PuzzleArena({ gameMode = GAME_MODES.SPEED_RUSH, onGameOv
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Fire confetti burst
+  const fireConfetti = useCallback(() => {
+    confetti({
+      particleCount: 80,
+      spread: 70,
+      origin: { y: 0.6 },
+      colors: ['#F59E0B', '#FBBF24', '#FCD34D', '#10B981', '#8B5CF6']
+    });
+  }, []);
+
+  // Trigger screen shake
+  const triggerShake = useCallback(() => {
+    setShaking(true);
+    setTimeout(() => setShaking(false), 500);
+  }, []);
+
   // Submit answer verification
   const handleSubmitAnswer = useCallback(async () => {
     if (selectedDigit === null || !currentPuzzle || loading) return;
@@ -217,9 +242,23 @@ export default function PuzzleArena({ gameMode = GAME_MODES.SPEED_RUSH, onGameOv
           points
         });
 
+        // Floating points animation
+        setPointsTrigger({ points, ts: Date.now() });
+
+        // Confetti on correct answer (bigger burst on streaks)
+        if (nextStreak >= 3) {
+          confetti({
+            particleCount: 120,
+            spread: 90,
+            origin: { y: 0.5 },
+            colors: ['#F59E0B', '#FBBF24', '#FCD34D', '#10B981', '#8B5CF6', '#06B6D4']
+          });
+        } else {
+          fireConfetti();
+        }
+
         // Mode Win / Progression Triggers
         if (isStreakMaster && nextSolved >= 10) {
-          // Player achieved Perfect 10 Streak Master
           setTimeout(() => {
             if (finishGameRef.current) finishGameRef.current();
           }, 850);
@@ -227,7 +266,6 @@ export default function PuzzleArena({ gameMode = GAME_MODES.SPEED_RUSH, onGameOv
         }
 
         if (isTimeAttack && nextSolved >= 10) {
-          // Completed 10-puzzle Time Attack Sprint
           setTimeout(() => {
             if (finishGameRef.current) finishGameRef.current();
           }, 850);
@@ -250,6 +288,9 @@ export default function PuzzleArena({ gameMode = GAME_MODES.SPEED_RUSH, onGameOv
           type: 'wrong',
           message: `INCORRECT! (Correct Answer: ${result.trueSolution})`
         });
+
+        // Screen shake on wrong answer
+        triggerShake();
 
         // Failure handling per mode
         if (isSurvival || isStreakMaster) {
@@ -274,7 +315,7 @@ export default function PuzzleArena({ gameMode = GAME_MODES.SPEED_RUSH, onGameOv
       console.error('[PuzzleArena] Verification error:', err);
       setLoading(false);
     }
-  }, [selectedDigit, currentPuzzle, loading, isStreakMaster, isTimeAttack, isSurvival, fetchNextPuzzle]);
+  }, [selectedDigit, currentPuzzle, loading, isStreakMaster, isTimeAttack, isSurvival, fetchNextPuzzle, fireConfetti, triggerShake]);
 
   // Reactive DOM Keyboard Listener (Theme 2: Event-Driven Programming)
   useEffect(() => {
@@ -328,57 +369,98 @@ export default function PuzzleArena({ gameMode = GAME_MODES.SPEED_RUSH, onGameOv
     }
   };
 
+  // Timer arc SVG values
+  const timerRadius = 28;
+  const timerCircumference = 2 * Math.PI * timerRadius;
+  const timerOffset = timerCircumference * (1 - timer.progress);
+
   return (
-    <div className="glass-panel" style={{
-      maxWidth: '850px',
-      margin: '0 auto',
-      padding: '2rem',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '1.5rem',
-      position: 'relative'
-    }}>
-      {/* Top HUD: Score, Streak, Mode, Timer, Lives */}
+    <motion.div
+      className="glass-panel"
+      initial={{ opacity: 0, y: 30 }}
+      animate={{
+        opacity: 1,
+        y: 0,
+        x: shaking ? [-8, 8, -6, 6, -3, 3, 0] : 0
+      }}
+      transition={shaking ? { duration: 0.5 } : { type: 'spring', stiffness: 200, damping: 20 }}
+      style={{
+        maxWidth: '850px',
+        margin: '0 auto',
+        padding: '2rem',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '1.5rem',
+        position: 'relative'
+      }}
+    >
+      {/* Floating Points Overlay */}
+      <FloatingPoints trigger={pointsTrigger} />
+
+      {/* ═══════ TOP HUD BAR ═══════ */}
       <div style={{
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        borderBottom: '1px solid var(--border-subtle)',
-        paddingBottom: '1rem',
-        flexWrap: 'wrap',
-        gap: '1rem'
+        gap: '0.75rem',
+        flexWrap: 'wrap'
       }}>
-        {/* Left: Score & Streak */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-          <div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              Score
-            </div>
-            <div style={{ fontSize: '1.75rem', fontWeight: 900, color: 'var(--accent-yellow)', fontFamily: 'var(--font-mono)' }}>
+        {/* Left: Score & Streak Cards */}
+        <div style={{ display: 'flex', gap: '0.75rem' }}>
+          {/* Score Card */}
+          <motion.div
+            className="hud-stat-card"
+            key={score}
+            animate={{ scale: [1, 1.08, 1] }}
+            transition={{ duration: 0.3 }}
+          >
+            <span className="stat-label">Score</span>
+            <span className="stat-value" style={{ color: 'var(--accent-yellow)' }}>
               {score.toLocaleString()}
-            </div>
-          </div>
+            </span>
+          </motion.div>
 
-          <div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              Streak
-            </div>
-            <div style={{
-              fontSize: '1.25rem',
-              fontWeight: 800,
-              color: streak >= 3 ? 'var(--accent-gold)' : 'var(--text-primary)',
+          {/* Streak Card */}
+          <motion.div
+            className="hud-stat-card"
+            style={{
+              animation: streak >= 3 ? 'streakFire 1s ease-in-out infinite' : 'none'
+            }}
+          >
+            <span className="stat-label">Streak</span>
+            <span className="stat-value" style={{
+              color: streak >= 5 ? 'var(--accent-gold)' : streak >= 3 ? 'var(--accent-yellow)' : 'var(--text-primary)',
               display: 'flex',
               alignItems: 'center',
-              gap: '0.25rem'
+              gap: '0.2rem'
             }}>
-              <span>🔥</span>
-              <span>{streak}x</span>
-            </div>
-          </div>
+              <motion.span
+                key={streak}
+                initial={{ scale: 0, rotate: -180 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ type: 'spring', stiffness: 300 }}
+              >
+                🔥
+              </motion.span>
+              <motion.span
+                key={`s-${streak}`}
+                initial={{ y: -20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ type: 'spring', stiffness: 400 }}
+              >
+                {streak}x
+              </motion.span>
+            </span>
+          </motion.div>
         </div>
 
-        {/* Center: Mode Badge & Puzzles Solved */}
-        <div style={{ textAlign: 'center' }}>
+        {/* Center: Mode Badge & Progress */}
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ type: 'spring', delay: 0.1 }}
+          style={{ textAlign: 'center' }}
+        >
           <span style={{
             fontSize: '0.75rem',
             fontWeight: 800,
@@ -386,7 +468,8 @@ export default function PuzzleArena({ gameMode = GAME_MODES.SPEED_RUSH, onGameOv
             borderRadius: 'var(--radius-full)',
             background: 'rgba(255, 255, 255, 0.05)',
             color: getModeColor(),
-            border: `1px solid ${getModeColor()}`
+            border: `1px solid ${getModeColor()}`,
+            display: 'inline-block'
           }}>
             {getModeLabel()}
           </span>
@@ -394,46 +477,85 @@ export default function PuzzleArena({ gameMode = GAME_MODES.SPEED_RUSH, onGameOv
             Solved: <strong>{solvedCount}</strong>
             {isStreakMaster || isTimeAttack ? ' / 10 Goal' : ` / ${attemptedCount}`}
           </div>
-        </div>
+        </motion.div>
 
-        {/* Right: Lives / Timer & Quit */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+        {/* Right: Timer / Lives / Quit */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           {/* Hearts Indicator */}
           {lives !== null && (
-            <div style={{ display: 'flex', gap: '0.25rem', fontSize: '1.25rem' }}>
+            <div style={{ display: 'flex', gap: '0.3rem', fontSize: '1.25rem' }}>
               {Array.from({ length: initialLives || 1 }).map((_, i) => (
-                <span key={i} style={{ opacity: i < lives ? 1 : 0.2 }}>
-                  ❤️
-                </span>
+                <motion.span
+                  key={i}
+                  animate={i >= lives ? {
+                    scale: [1, 1.3, 0],
+                    rotate: [0, 15, 30],
+                    opacity: [1, 0.5, 0]
+                  } : { scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.5 }}
+                  style={{ display: 'inline-block' }}
+                >
+                  {i < lives ? '❤️' : '🖤'}
+                </motion.span>
               ))}
             </div>
           )}
 
-          {/* Clock or Mode Condition */}
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-              {hasTimer ? 'Time Left' : 'Time Limit'}
+          {/* Timer: Circular Arc for timed modes */}
+          {hasTimer ? (
+            <div className="timer-progress-ring">
+              <svg width="70" height="70" viewBox="0 0 70 70">
+                <circle
+                  className="ring-bg"
+                  cx="35" cy="35" r={timerRadius}
+                />
+                <circle
+                  className="ring-fg"
+                  cx="35" cy="35" r={timerRadius}
+                  stroke={timer.isWarning ? 'var(--accent-rose)' : 'var(--accent-gold)'}
+                  strokeDasharray={timerCircumference}
+                  strokeDashoffset={timerOffset}
+                />
+              </svg>
+              <div style={{
+                position: 'absolute',
+                inset: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexDirection: 'column'
+              }}>
+                <motion.span
+                  style={{
+                    fontSize: '1.1rem',
+                    fontWeight: 900,
+                    fontFamily: 'var(--font-mono)',
+                    color: timer.isWarning ? 'var(--accent-rose)' : 'var(--text-primary)',
+                    animation: timer.isWarning ? 'timerUrgent 0.8s infinite' : 'none'
+                  }}
+                >
+                  {timer.secondsRemaining}s
+                </motion.span>
+              </div>
             </div>
-            <div style={{
-              fontSize: '1.75rem',
-              fontWeight: 900,
-              fontFamily: 'var(--font-mono)',
-              color: hasTimer
-                ? (timer.isWarning ? 'var(--accent-rose)' : 'var(--text-primary)')
-                : 'var(--accent-emerald)',
-              animation: hasTimer && timer.isWarning ? 'pulse 0.8s infinite' : 'none'
-            }}>
-              {hasTimer ? `${timer.secondsRemaining}s` : '∞ Untimed'}
+          ) : (
+            <div className="hud-stat-card">
+              <span className="stat-label">Timer</span>
+              <span className="stat-value" style={{ color: 'var(--accent-emerald)', fontSize: '1rem' }}>
+                ∞
+              </span>
             </div>
-          </div>
+          )}
 
-          <button
+          <motion.button
             onClick={onQuit}
             className="btn-secondary"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             style={{ padding: '0.4rem 0.8rem', fontSize: '0.75rem' }}
           >
             Quit
-          </button>
+          </motion.button>
         </div>
       </div>
 
@@ -446,36 +568,32 @@ export default function PuzzleArena({ gameMode = GAME_MODES.SPEED_RUSH, onGameOv
           borderRadius: 'var(--radius-full)',
           overflow: 'hidden'
         }}>
-          <div style={{
-            width: `${timer.progress * 100}%`,
-            height: '100%',
-            background: timer.isWarning ? 'var(--grad-danger)' : 'var(--grad-banana)',
-            transition: 'width 100ms linear'
-          }} />
+          <motion.div
+            style={{
+              width: `${timer.progress * 100}%`,
+              height: '100%',
+              background: timer.isWarning ? 'var(--grad-danger)' : 'var(--grad-banana)',
+              borderRadius: 'var(--radius-full)'
+            }}
+            transition={{ duration: 0.1 }}
+          />
         </div>
       )}
 
-      {/* Main Puzzle Display Arena */}
+      {/* ═══════ MAIN PUZZLE DISPLAY ARENA ═══════ */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'minmax(320px, 1fr) 300px',
         gap: '2rem',
         alignItems: 'center'
       }}>
-        {/* Left Column: Puzzle Image with Fallback Badge */}
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: '1rem',
-          background: 'rgba(0,0,0,0.3)',
-          borderRadius: 'var(--radius-lg)',
-          padding: '1.25rem',
-          border: '1px solid var(--border-subtle)',
-          minHeight: '280px',
-          justifyContent: 'center',
-          position: 'relative'
-        }}>
+        {/* Left Column: Puzzle Image */}
+        <motion.div
+          className="puzzle-container"
+          initial={{ opacity: 0, x: -30 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.15 }}
+        >
           {currentPuzzle?.isFallback && (
             <div style={{
               position: 'absolute',
@@ -487,29 +605,49 @@ export default function PuzzleArena({ gameMode = GAME_MODES.SPEED_RUSH, onGameOv
               padding: '0.2rem 0.6rem',
               fontSize: '0.65rem',
               fontWeight: 700,
-              color: 'var(--accent-yellow)'
+              color: 'var(--accent-yellow)',
+              zIndex: 2
             }}>
               🛡️ Offline Resilient Fallback
             </div>
           )}
 
-          {loading && !currentPuzzle ? (
-            <div style={{ textAlign: 'center', color: 'var(--text-muted)' }}>
-              <span style={{ fontSize: '2rem' }}>🍌</span>
-              <p style={{ marginTop: '0.5rem', fontSize: '0.9rem' }}>Loading next math puzzle from Banana API...</p>
-            </div>
-          ) : currentPuzzle ? (
-            <img
-              src={currentPuzzle.question}
-              alt="Banana Math Puzzle"
-              style={{
-                maxWidth: '100%',
-                maxHeight: '260px',
-                objectFit: 'contain',
-                borderRadius: 'var(--radius-md)'
-              }}
-            />
-          ) : null}
+          <AnimatePresence mode="wait">
+            {loading && !currentPuzzle ? (
+              <motion.div
+                key="loading"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                style={{ textAlign: 'center', color: 'var(--text-muted)' }}
+              >
+                <motion.span
+                  animate={{ rotate: [0, 20, -20, 0], scale: [1, 1.2, 1] }}
+                  transition={{ repeat: Infinity, duration: 1.5 }}
+                  style={{ fontSize: '2.5rem', display: 'block' }}
+                >
+                  🍌
+                </motion.span>
+                <p style={{ marginTop: '0.5rem', fontSize: '0.9rem' }}>Loading next puzzle...</p>
+              </motion.div>
+            ) : currentPuzzle ? (
+              <motion.img
+                key={currentPuzzle.puzzleId}
+                src={currentPuzzle.question}
+                alt="Banana Math Puzzle"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8, y: -20 }}
+                transition={{ type: 'spring', stiffness: 200, damping: 20 }}
+                style={{
+                  maxWidth: '100%',
+                  maxHeight: '260px',
+                  objectFit: 'contain',
+                  borderRadius: 'var(--radius-md)'
+                }}
+              />
+            ) : null}
+          </AnimatePresence>
 
           {/* Answer Preview Box */}
           <div style={{
@@ -521,28 +659,47 @@ export default function PuzzleArena({ gameMode = GAME_MODES.SPEED_RUSH, onGameOv
             <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
               Your Answer:
             </span>
-            <div style={{
-              width: '54px',
-              height: '54px',
-              borderRadius: 'var(--radius-md)',
-              border: '2px solid var(--accent-gold)',
-              background: 'var(--bg-tertiary)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '2rem',
-              fontWeight: 900,
-              fontFamily: 'var(--font-mono)',
-              color: selectedDigit !== null ? 'var(--accent-yellow)' : 'var(--text-muted)',
-              boxShadow: selectedDigit !== null ? 'var(--shadow-glow)' : 'none'
-            }}>
-              {selectedDigit !== null ? selectedDigit : '?'}
-            </div>
+            <motion.div
+              animate={{
+                borderColor: selectedDigit !== null ? 'var(--accent-gold)' : 'var(--border-medium)',
+                boxShadow: selectedDigit !== null ? '0 0 20px var(--accent-gold-glow)' : 'none'
+              }}
+              style={{
+                width: '54px',
+                height: '54px',
+                borderRadius: 'var(--radius-md)',
+                border: '2px solid var(--accent-gold)',
+                background: 'var(--bg-tertiary)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '2rem',
+                fontWeight: 900,
+                fontFamily: 'var(--font-mono)',
+                color: selectedDigit !== null ? 'var(--accent-yellow)' : 'var(--text-muted)'
+              }}
+            >
+              <AnimatePresence mode="wait">
+                <motion.span
+                  key={selectedDigit ?? 'empty'}
+                  initial={{ scale: 0, rotate: -90 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  exit={{ scale: 0, rotate: 90 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+                >
+                  {selectedDigit !== null ? selectedDigit : '?'}
+                </motion.span>
+              </AnimatePresence>
+            </motion.div>
           </div>
-        </div>
+        </motion.div>
 
-        {/* Right Column: Tactile Numpad */}
-        <div>
+        {/* Right Column: Tactile 3D Numpad */}
+        <motion.div
+          initial={{ opacity: 0, x: 30 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.2 }}
+        >
           <Numpad
             onDigitPress={(d) => setSelectedDigit(d)}
             onClear={() => setSelectedDigit(null)}
@@ -550,25 +707,34 @@ export default function PuzzleArena({ gameMode = GAME_MODES.SPEED_RUSH, onGameOv
             disabled={loading}
             activeDigit={selectedDigit}
           />
-        </div>
+        </motion.div>
       </div>
 
-      {/* Real-Time Answer Feedback Banner */}
-      {feedback && (
-        <div style={{
-          padding: '0.85rem',
-          borderRadius: 'var(--radius-md)',
-          textAlign: 'center',
-          fontWeight: 800,
-          fontSize: '1rem',
-          background: feedback.type === 'correct' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(244, 63, 94, 0.15)',
-          border: `1px solid ${feedback.type === 'correct' ? 'var(--accent-emerald)' : 'var(--accent-rose)'}`,
-          color: feedback.type === 'correct' ? 'var(--accent-emerald)' : 'var(--accent-rose)',
-          animation: 'fadeIn 0.2s ease-out'
-        }}>
-          {feedback.message}
-        </div>
-      )}
-    </div>
+      {/* ═══════ REAL-TIME ANSWER FEEDBACK BANNER ═══════ */}
+      <AnimatePresence>
+        {feedback && (
+          <motion.div
+            key={feedback.message}
+            initial={{ opacity: 0, y: 20, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.9 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+            className={feedback.type === 'correct' ? 'feedback-correct' : 'feedback-wrong'}
+            style={{
+              padding: '0.85rem',
+              borderRadius: 'var(--radius-md)',
+              textAlign: 'center',
+              fontWeight: 800,
+              fontSize: '1rem',
+              background: feedback.type === 'correct' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(244, 63, 94, 0.15)',
+              border: `1px solid ${feedback.type === 'correct' ? 'var(--accent-emerald)' : 'var(--accent-rose)'}`,
+              color: feedback.type === 'correct' ? 'var(--accent-emerald)' : 'var(--accent-rose)'
+            }}
+          >
+            {feedback.type === 'correct' ? '✅ ' : '❌ '}{feedback.message}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 }
