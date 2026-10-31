@@ -296,6 +296,56 @@ router.post('/:roomId/action', async (req, res, next) => {
 });
 
 /**
+ * POST /api/rooms/:roomId/quit
+ * Handles player forfeiting or leaving the duel.
+ * If one player quits, the other player automatically wins!
+ */
+router.post('/:roomId/quit', (req, res, next) => {
+  try {
+    const { roomId } = req.params;
+    let playerId = req.body?.playerId || req.query?.playerId;
+    if (!playerId && typeof req.body === 'string') {
+      try {
+        const parsed = JSON.parse(req.body);
+        playerId = parsed.playerId;
+      } catch { }
+    }
+    const room = rooms.get(roomId?.toUpperCase());
+    if (!room) return res.status(404).json({ error: 'Room not found or expired' });
+
+    if (room.status === 'playing') {
+      const isHost = room.host.id === playerId;
+      const isGuest = room.guest && room.guest.id === playerId;
+
+      if (isHost || isGuest) {
+        room.status = 'finished';
+        const remainingPlayer = isHost ? room.guest : room.host;
+        const quittingPlayer = isHost ? room.host : room.guest;
+
+        room.winner = {
+          id: remainingPlayer?.id,
+          name: remainingPlayer?.name || 'Opponent',
+          role: isHost ? 'guest' : 'host',
+          forfeit: true,
+          quitterName: quittingPlayer?.name || 'Your opponent'
+        };
+
+        broadcastRoomUpdate(room);
+        return res.json({ success: true, room: getSanitizedRoom(room) });
+      }
+    }
+
+    if (room.status === 'waiting') {
+      rooms.delete(roomId?.toUpperCase());
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
  * POST /api/rooms/:roomId/finish
  * Concludes the duel when the countdown timer expires
  */

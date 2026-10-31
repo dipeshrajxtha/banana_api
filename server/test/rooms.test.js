@@ -95,4 +95,30 @@ describe('1v1 Multiplayer Room Battle Integration Tests', () => {
     assert.equal(res.body.room.status, 'finished');
     assert.ok(res.body.room.winner);
   });
+
+  it('POST /api/rooms/:roomId/quit: if one friend quits, the other friend wins automatically', async () => {
+    // Create new active match
+    const createRes = await request(app)
+      .post('/api/rooms/create')
+      .send({ durationMinutes: 3, playerName: 'Host Quitter' });
+    const roomId = createRes.body.roomId;
+    const hostId = createRes.body.playerId;
+
+    const joinRes = await request(app)
+      .post(`/api/rooms/${roomId}/join`)
+      .send({ playerName: 'Friend Winner' });
+    const guestId = joinRes.body.playerId;
+
+    // Host quits match
+    const quitRes = await request(app)
+      .post(`/api/rooms/${roomId}/quit`)
+      .send({ playerId: hostId });
+
+    assert.equal(quitRes.status, 200);
+    assert.equal(quitRes.body.room.status, 'finished');
+    assert.equal(quitRes.body.room.winner.id, guestId);
+    assert.equal(quitRes.body.room.winner.forfeit, true);
+    assert.equal(quitRes.body.room.winner.quitterName, 'Host Quitter');
+  });
 });
+

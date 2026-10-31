@@ -323,33 +323,6 @@ export default function MinionCenterpiece({ onTriggerIntro }) {
           <polygon points="48,165 50,161 52,165 56,167 52,169 50,173 48,169 44,167" fill="#FFFFFF" />
         </g>
       </motion.svg>
-
-      {/* Action Bar Under Minion */}
-      <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem', zIndex: 10 }}>
-        <motion.button
-          onClick={(e) => {
-            e.stopPropagation();
-            if (onTriggerIntro) onTriggerIntro();
-          }}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          className="btn-primary"
-          style={{
-            padding: '0.6rem 1.4rem',
-            fontSize: '0.9rem',
-            background: 'linear-gradient(135deg, #FFD700 0%, #F59E0B 100%)',
-            color: '#000',
-            fontWeight: 800,
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            boxShadow: '0 0 20px rgba(255, 215, 0, 0.4)'
-          }}
-        >
-          <span>🎬</span>
-          <span>Watch 6-Part Cinematic Intro</span>
-        </motion.button>
-      </div>
     </div>
   );
 }
