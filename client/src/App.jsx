@@ -19,6 +19,7 @@ import MatchIntro from './components/MatchIntro.jsx';
 import FloatingPoints from './components/FloatingPoints.jsx';
 import MinionCenterpiece from './components/MinionCenterpiece.jsx';
 import CinematicIntroModal from './components/CinematicIntroModal.jsx';
+import MultiplayerArena from './components/MultiplayerArena.jsx';
 import { soundService } from './services/soundService.js';
 import { eventBus } from './events/eventBus.js';
 
@@ -42,6 +43,16 @@ export default function App() {
 
   // Cinematic 6-Part Intro State
   const [showCinematicIntro, setShowCinematicIntro] = useState(false);
+
+  // Multiplayer 1v1 Room Battle State
+  const [multiplayerRoomId, setMultiplayerRoomId] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('room');
+  });
+  const [isMultiplayerActive, setIsMultiplayerActive] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return Boolean(params.get('room'));
+  });
 
   // Architecture telemetry state
   const [telemetryData, setTelemetryData] = useState(null);
@@ -388,27 +399,39 @@ export default function App() {
 
       {/* Main Content Area */}
       <main style={{ flex: 1, maxWidth: '1200px', width: '100%', margin: '0 auto', padding: '2.5rem 1.5rem' }}>
-        {/* Active Game Mode View */}
-        <AnimatePresence mode="wait">
-          {activeGameMode ? (
-            <motion.div
-              key="arena"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-            >
-              <PuzzleArena
-                gameMode={activeGameMode}
-                onGameOver={(stats) => {
-                  setGameOverStats(stats);
-                  setActiveGameMode(null);
-                }}
-                onQuit={() => setActiveGameMode(null)}
-              />
-            </motion.div>
-          ) : (
-            <>
-              {/* Tab: Welcome & Home */}
+        {/* Active Multiplayer 1v1 Room Battle View */}
+        {isMultiplayerActive ? (
+          <MultiplayerArena
+            currentUser={currentUser}
+            initialRoomId={multiplayerRoomId}
+            onQuit={() => {
+              setIsMultiplayerActive(false);
+              setMultiplayerRoomId(null);
+              window.history.replaceState({}, '', window.location.pathname);
+            }}
+          />
+        ) : (
+          /* Active Single-Player Arcade Mode View */
+          <AnimatePresence mode="wait">
+            {activeGameMode ? (
+              <motion.div
+                key="arena"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+              >
+                <PuzzleArena
+                  gameMode={activeGameMode}
+                  onGameOver={(stats) => {
+                    setGameOverStats(stats);
+                    setActiveGameMode(null);
+                  }}
+                  onQuit={() => setActiveGameMode(null)}
+                />
+              </motion.div>
+            ) : (
+              <>
+                {/* Tab: Welcome & Home */}
               {activeTab === 'welcome' && (
                 <motion.div
                   key="welcome"
@@ -476,13 +499,28 @@ export default function App() {
                       style={{ display: 'flex', justifyContent: 'center', gap: '1rem', flexWrap: 'wrap' }}
                     >
                       <motion.button
-                        onClick={() => handleStartGame(GAME_MODES.SPEED_RUSH)}
+                        onClick={() => setIsMultiplayerActive(true)}
                         className="btn-primary"
-                        whileHover={{ scale: 1.05, boxShadow: '0 0 35px var(--accent-gold-glow)' }}
+                        whileHover={{ scale: 1.05, boxShadow: '0 0 35px rgba(255, 215, 0, 0.6)' }}
+                        whileTap={{ scale: 0.95 }}
+                        style={{
+                          fontSize: '1.05rem',
+                          padding: '0.9rem 1.75rem',
+                          background: 'linear-gradient(135deg, #FFD700 0%, #F59E0B 100%)',
+                          color: '#000',
+                          fontWeight: 900
+                        }}
+                      >
+                        ⚔️ 1v1 Battle a Friend (3/5/7 Min)
+                      </motion.button>
+                      <motion.button
+                        onClick={() => handleStartGame(GAME_MODES.SPEED_RUSH)}
+                        className="btn-secondary"
+                        whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         style={{ fontSize: '1.05rem', padding: '0.9rem 1.75rem' }}
                       >
-                        ⚡ Speed Rush (60s)
+                        ⚡ Stuart’s Speed Rush (60s)
                       </motion.button>
                       <motion.button
                         onClick={() => handleStartGame(GAME_MODES.SURVIVAL)}
@@ -491,7 +529,7 @@ export default function App() {
                         whileTap={{ scale: 0.95 }}
                         style={{ fontSize: '1.05rem', padding: '0.9rem 1.75rem' }}
                       >
-                        🛡️ Survival Mode (3 Strikes)
+                        🛡️ Kevin’s Survival (3 Strikes)
                       </motion.button>
                       <motion.button
                         onClick={() => handleStartGame(GAME_MODES.STREAK_MASTER)}
@@ -946,6 +984,7 @@ export default function App() {
             </>
           )}
         </AnimatePresence>
+        )}
       </main>
 
       {/* Game Over Modal with Grade Tier Diagnostics & Score Auto-Recording */}

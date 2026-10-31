@@ -514,3 +514,4 @@ export default function CinematicIntroModal({ isOpen, onClose, onStartGame }) {
     </motion.div>
   );
 }
+

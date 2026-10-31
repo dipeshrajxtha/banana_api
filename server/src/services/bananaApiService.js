@@ -24,7 +24,33 @@ const telemetry = {
 
 // In-memory pre-fetched puzzle cache to avoid hammering the university API
 const puzzleCache = [];
-const MAX_CACHE_SIZE = 10;
+const TARGET_CACHE_SIZE = 5;
+let isRefilling = false;
+
+/**
+ * Asynchronously refills the in-memory puzzle cache in the background
+ */
+async function refillPuzzleCache() {
+  if (isRefilling || puzzleCache.length >= TARGET_CACHE_SIZE) return;
+  isRefilling = true;
+
+  try {
+    while (puzzleCache.length < TARGET_CACHE_SIZE) {
+      const puzzle = await bananaApiService.fetchRemotePuzzle();
+      puzzleCache.push(puzzle);
+    }
+  } catch (err) {
+    console.warn('[BananaApiService] Cache refill note:', err.message);
+  } finally {
+    isRefilling = false;
+  }
+}
+
+// Initial background cache warm-up (non-blocking)
+const warmupTimer = setTimeout(() => {
+  refillPuzzleCache();
+}, 500);
+if (warmupTimer.unref) warmupTimer.unref();
 
 /**
  * Procedural Fallback Puzzle Generator
@@ -188,13 +214,17 @@ export const bananaApiService = {
    * @returns {Promise<{ question: string, puzzleId: string, isFallback: boolean }>}
    */
   async getPuzzleForClient() {
-    // Check if we have pre-cached puzzles
+    // Check if we have pre-cached puzzles for instant 0ms delivery
     let puzzle;
     if (puzzleCache.length > 0) {
       telemetry.cacheHits += 1;
       puzzle = puzzleCache.shift();
+      // Refill in background asynchronously without blocking this response
+      refillPuzzleCache();
     } else {
       puzzle = await this.fetchRemotePuzzle();
+      // Start background replenishment
+      refillPuzzleCache();
     }
 
     // Cryptographically seal solution

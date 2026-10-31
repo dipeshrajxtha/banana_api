@@ -34,20 +34,36 @@ export default function MatchIntro({ gameMode, onComplete }) {
   const [finished, setFinished] = useState(false);
   const modeInfo = getModeIntro(gameMode);
 
+  const handleSkipNow = () => {
+    setFinished(true);
+    if (onComplete) onComplete();
+  };
+
   useEffect(() => {
-    // Show mode title for 1.2s, then countdown
+    // Quick, punchy arcade countdown sequence (~1.9s total)
     const timers = [];
 
-    timers.push(setTimeout(() => setStep(0), 1200));
-    timers.push(setTimeout(() => setStep(1), 2000));
-    timers.push(setTimeout(() => setStep(2), 2800));
-    timers.push(setTimeout(() => setStep(3), 3600));
+    timers.push(setTimeout(() => setStep(0), 500));
+    timers.push(setTimeout(() => setStep(1), 900));
+    timers.push(setTimeout(() => setStep(2), 1300));
+    timers.push(setTimeout(() => setStep(3), 1700));
     timers.push(setTimeout(() => {
       setFinished(true);
       if (onComplete) onComplete();
-    }, 4400));
+    }, 2100));
 
-    return () => timers.forEach(clearTimeout);
+    // Global skip hotkey (Space, Enter, Escape)
+    const handleKey = (e) => {
+      if (['Space', 'Enter', 'Escape'].includes(e.code)) {
+        handleSkipNow();
+      }
+    };
+    window.addEventListener('keydown', handleKey);
+
+    return () => {
+      timers.forEach(clearTimeout);
+      window.removeEventListener('keydown', handleKey);
+    };
   }, [onComplete]);
 
   if (finished) return null;
@@ -57,6 +73,8 @@ export default function MatchIntro({ gameMode, onComplete }) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
+      onClick={handleSkipNow}
+      title="Click or press Space to start immediately!"
       style={{
         position: 'fixed',
         inset: 0,
@@ -67,9 +85,25 @@ export default function MatchIntro({ gameMode, onComplete }) {
         justifyContent: 'center',
         background: 'radial-gradient(ellipse at center, rgba(10, 13, 20, 0.95) 0%, rgba(5, 7, 12, 0.99) 100%)',
         backdropFilter: 'blur(20px)',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        cursor: 'pointer'
       }}
     >
+      {/* Instant Skip Hint Pill */}
+      <div style={{
+        position: 'absolute',
+        bottom: '2rem',
+        padding: '0.4rem 1rem',
+        borderRadius: '20px',
+        background: 'rgba(255, 255, 255, 0.1)',
+        border: '1px solid rgba(255, 215, 0, 0.3)',
+        color: '#FFD700',
+        fontSize: '0.8rem',
+        fontWeight: 700,
+        letterSpacing: '0.05em'
+      }}>
+        ⚡ Click anywhere or press <kbd style={{ background: '#333', padding: '2px 6px', borderRadius: '4px' }}>SPACE</kbd> to start instantly
+      </div>
       {/* Background Particles */}
       <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
         {Array.from({ length: 20 }).map((_, i) => (

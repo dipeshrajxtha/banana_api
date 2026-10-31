@@ -150,3 +150,4 @@ export default function MinionReactionAvatar({ reaction = 'idle', feedbackText =
     </div>
   );
 }
+

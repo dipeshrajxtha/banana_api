@@ -35,7 +35,7 @@ export const config = {
   // External Interoperability Services (Theme 3)
   services: {
     bananaApiUrl: process.env.BANANA_API_URL || 'https://marcconrad.com/uob/banana/api.php?out=json',
-    bananaApiTimeoutMs: parseInt(process.env.BANANA_API_TIMEOUT_MS, 10) || 8000,
+    bananaApiTimeoutMs: parseInt(process.env.BANANA_API_TIMEOUT_MS, 10) || 3000,
     bananaApiCacheTtlMs: parseInt(process.env.BANANA_API_CACHE_TTL_MS, 10) || 60000
   },
 

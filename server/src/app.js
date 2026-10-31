@@ -21,6 +21,7 @@ import authRouter from './routes/auth.js';
 import adminRouter from './routes/admin.js';
 import bananaRouter from './routes/banana.js';
 import scoresRouter from './routes/scores.js';
+import roomsRouter from './routes/rooms.js';
 
 
 
@@ -54,6 +55,7 @@ app.use('/api/auth', authRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/banana', bananaRouter);
 app.use('/api/scores', scoresRouter);
+app.use('/api/rooms', roomsRouter);
 
 
 
