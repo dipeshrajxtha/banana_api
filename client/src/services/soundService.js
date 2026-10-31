@@ -109,40 +109,45 @@ class SoundService {
   }
 
   /**
-   * Ascending arpeggio chime for correct answers (C5 -> E5 -> G5, 523Hz -> 659Hz -> 784Hz)
+   * Ascending arpeggio chime for correct answers (Illumination arcade celebration)
    * Plays extra flourish if streak multiplier is active.
    */
   playCorrect(streak = 0) {
-    this.playTone(523.25, 'triangle', 0.1, 0);
-    this.playTone(659.25, 'triangle', 0.1, 0.08);
-    this.playTone(783.99, 'triangle', 0.15, 0.16);
+    this.playTone(587.33, 'triangle', 0.09, 0);     // D5
+    this.playTone(739.99, 'triangle', 0.09, 0.07);  // F#5
+    this.playTone(880.00, 'triangle', 0.12, 0.14);  // A5
+    this.playTone(1174.66, 'sine', 0.18, 0.21);     // D6 "Woo-hoo!"
 
-    // Multiplier fanfare chord if on a 3+ streak!
+    // Multiplier fanfare chord if on a 3+ streak! (Mega Minion fanfare)
     if (streak >= 3) {
-      this.playTone(1046.50, 'sine', 0.22, 0.24); // High C6
+      this.playTone(1479.98, 'sine', 0.25, 0.28); // F#6
+      this.playTone(1760.00, 'sine', 0.35, 0.34); // A6
     }
   }
 
   /**
-   * Low discordant downward buzz for incorrect answers (220 Hz -> 110 Hz sawtooth)
+   * Comical cartoon slide down for incorrect answers
    */
   playWrong() {
-    this.playTone(220, 'sawtooth', 0.25, 0, 110);
+    this.playTone(350, 'sawtooth', 0.15, 0, 220);
+    this.playTone(220, 'sawtooth', 0.25, 0.12, 110);
   }
 
   /**
    * Dramatic life-lost buzz
    */
   playLifeLost() {
-    this.playTone(196, 'sawtooth', 0.35, 0, 82);
+    this.playTone(280, 'sawtooth', 0.2, 0, 140);
+    this.playTone(140, 'sawtooth', 0.3, 0.18, 70);
   }
 
   /**
-   * Short double tick for urgent timer warnings (under 4s left)
+   * "BEE-DO BEE-DO!" Minion Emergency siren for urgent timer warnings (under 5s left)
    */
   playTimerWarning() {
-    this.playTone(880, 'square', 0.03, 0);
-    this.playTone(880, 'square', 0.03, 0.1);
+    // High-low emergency siren sweep
+    this.playTone(920, 'square', 0.08, 0, 1150);
+    this.playTone(720, 'square', 0.08, 0.09, 600);
   }
 
   /**

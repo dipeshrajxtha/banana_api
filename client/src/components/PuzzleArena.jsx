@@ -17,6 +17,7 @@ import confetti from 'canvas-confetti';
 import { GAME_EVENTS, GAME_MODES } from '@banana-quest/shared';
 import Numpad from './Numpad.jsx';
 import FloatingPoints from './FloatingPoints.jsx';
+import MinionReactionAvatar from './MinionReactionAvatar.jsx';
 import { useGameTimer } from '../hooks/useGameTimer.js';
 import { eventBus } from '../events/eventBus.js';
 
@@ -374,6 +375,13 @@ export default function PuzzleArena({ gameMode = GAME_MODES.SPEED_RUSH, onGameOv
   const timerCircumference = 2 * Math.PI * timerRadius;
   const timerOffset = timerCircumference * (1 - timer.progress);
 
+  // Dynamic Minion Reaction State
+  const minionReaction = feedback?.type === 'correct'
+    ? (streak >= 3 ? 'streak' : 'correct')
+    : feedback?.type === 'wrong'
+      ? 'wrong'
+      : (hasTimer && timer.isWarning ? 'urgent' : 'idle');
+
   return (
     <motion.div
       className="glass-panel"
@@ -694,12 +702,19 @@ export default function PuzzleArena({ gameMode = GAME_MODES.SPEED_RUSH, onGameOv
           </div>
         </motion.div>
 
-        {/* Right Column: Tactile 3D Numpad */}
+        {/* Right Column: Minion Lab Assistant & Tactile 3D Numpad */}
         <motion.div
           initial={{ opacity: 0, x: 30 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.2 }}
+          style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}
         >
+          {/* Minion Laboratory Teammate */}
+          <MinionReactionAvatar
+            reaction={minionReaction}
+            feedbackText={feedback ? (feedback.type === 'correct' ? 'BANANAAA! 🎉' : 'TRY AGAIN! 🧐') : null}
+          />
+
           <Numpad
             onDigitPress={(d) => setSelectedDigit(d)}
             onClear={() => setSelectedDigit(null)}

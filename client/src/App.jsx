@@ -9,7 +9,7 @@
  * @reference University of Bedfordshire - CIS046-3
  */
 
-import React, { useState, useEffect, Suspense, lazy } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GRADE_TIERS, GAME_MODES } from '@banana-quest/shared';
 import PuzzleArena from './components/PuzzleArena.jsx';
@@ -17,11 +17,10 @@ import GameOverModal from './components/GameOverModal.jsx';
 import IdentityPromptModal from './components/IdentityPromptModal.jsx';
 import MatchIntro from './components/MatchIntro.jsx';
 import FloatingPoints from './components/FloatingPoints.jsx';
+import MinionCenterpiece from './components/MinionCenterpiece.jsx';
+import CinematicIntroModal from './components/CinematicIntroModal.jsx';
 import { soundService } from './services/soundService.js';
 import { eventBus } from './events/eventBus.js';
-
-// Lazy-load 3D canvas to avoid blocking initial paint
-const Banana3D = lazy(() => import('./components/Banana3D.jsx'));
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('welcome');
@@ -40,6 +39,9 @@ export default function App() {
   // Match Intro State
   const [showIntro, setShowIntro] = useState(false);
   const [introMode, setIntroMode] = useState(null);
+
+  // Cinematic 6-Part Intro State
+  const [showCinematicIntro, setShowCinematicIntro] = useState(false);
 
   // Architecture telemetry state
   const [telemetryData, setTelemetryData] = useState(null);
@@ -146,52 +148,52 @@ export default function App() {
     }
   };
 
-  // Mode card configurations
+  // Mode card configurations — Authentic Minion Lab Trials
   const modeCards = [
     {
       mode: GAME_MODES.SPEED_RUSH,
-      icon: '⚡', name: 'Speed Rush',
-      sub: '60-Second Timed Sprint',
+      icon: '⚡', name: 'Stuart’s Speed Rush',
+      sub: '60-Second Overdrive Sprint',
       color: 'var(--accent-purple)',
-      desc: 'Race against the global 60-second countdown clock. Solve as many equations as possible. Consecutive correct answers award exponential multiplier streaks!',
+      desc: 'Race against the 60-second lab clock! Stuart’s equation sprint awards exponential multiplier streaks for consecutive correct answers.',
       btnClass: 'btn-primary',
-      btnLabel: '🚀 Launch Speed Rush'
+      btnLabel: '⚡ Launch Speed Rush'
     },
     {
       mode: GAME_MODES.SURVIVAL,
-      icon: '🛡️', name: 'Survival Mode',
-      sub: '3 Lives • Unlimited Time',
+      icon: '🛡️', name: 'Kevin’s Survival Protocol',
+      sub: '3 Banana Hearts • Unlimited Time',
       color: 'var(--accent-rose)',
-      desc: 'Sudden death puzzle endurance. You have 3 hearts and unlimited time per puzzle. Think carefully—every wrong answer consumes 1 heart. How far can you survive?',
+      desc: 'Sudden-death endurance trial directed by Kevin. You have 3 lives and unlimited calculation time. Think carefully—each error costs one life!',
       btnClass: 'btn-secondary',
       btnLabel: '🛡️ Launch Survival'
     },
     {
       mode: GAME_MODES.STREAK_MASTER,
-      icon: '🎯', name: 'Perfect 10 Streak',
+      icon: '🎯', name: 'Bob’s Perfect 10',
       sub: '1 Life • Flawless 10-Win Target',
       color: 'var(--accent-gold)',
-      desc: 'High-stakes precision run. You have only 1 life. Achieve 10 consecutive correct answers to conquer this trial. One single mistake ends the run!',
+      desc: 'High-stakes precision run with Bob! You have only 1 life. Achieve 10 consecutive correct answers to claim the Golden Trophy.',
       btnClass: 'btn-secondary',
       btnLabel: '🎯 Launch Perfect 10'
     },
     {
       mode: GAME_MODES.TIME_ATTACK,
-      icon: '⏱️', name: 'Time Attack',
+      icon: '🚀', name: 'Otto’s Rocket Sprint',
       sub: '90s Max • Solve 10 Equations Fast',
       color: 'var(--accent-cyan)',
-      desc: 'A rapid 10-puzzle sprint against the clock. Solve all 10 equations as quickly as possible to maximize your lightning speed bonuses and achieve S-Tier rank!',
+      desc: 'Fuel Otto’s retro rocket ship! Solve 10 math equations as fast as possible to maximize your lightning velocity bonuses.',
       btnClass: 'btn-secondary',
-      btnLabel: '⏱️ Launch Time Attack'
+      btnLabel: '🚀 Launch Rocket Sprint'
     },
     {
       mode: GAME_MODES.PRACTICE,
-      icon: '🧘', name: 'Zen Practice',
+      icon: '🧘', name: 'Zen Banana Break',
       sub: 'Casual • Unlimited Lives & Time',
       color: 'var(--accent-emerald)',
-      desc: 'Relaxed mathematical training. Unlimited puzzles, no timers, and no penalties. Ideal for warming up mental calculation reflexes or learning the equation patterns.',
+      desc: 'Relaxed laboratory training session in the Minion break room. Unlimited equations, no pressure, zero penalties. Perfect for warm-ups.',
       btnClass: 'btn-secondary',
-      btnLabel: '🧘 Enter Zen Practice'
+      btnLabel: '🧘 Enter Break Room'
     }
   ];
 
@@ -207,6 +209,13 @@ export default function App() {
           />
         )}
       </AnimatePresence>
+
+      {/* 6-Part Continuous Cinematic Intro Video Modal */}
+      <CinematicIntroModal
+        isOpen={showCinematicIntro}
+        onClose={() => setShowCinematicIntro(false)}
+        onStartGame={() => handleStartGame(GAME_MODES.SPEED_RUSH)}
+      />
 
       {/* Top Navigation Bar */}
       <header style={{
@@ -279,8 +288,30 @@ export default function App() {
             ))}
           </nav>
 
-          {/* Audio Controls & Virtual Identity (Theme 2 & 4) */}
+          {/* Audio Controls, Cinematic Intro & Virtual Identity */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            {/* Watch 6-Part Feature Film Cinematic Intro */}
+            <motion.button
+              onClick={() => setShowCinematicIntro(true)}
+              className="btn-secondary"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              style={{
+                padding: '0.45rem 0.85rem',
+                fontSize: '0.8rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                borderColor: '#FFD700',
+                color: '#FFD700',
+                background: 'rgba(255, 215, 0, 0.1)'
+              }}
+              title="Watch 6-Part Continuous Cinematic Intro Video"
+            >
+              <span>🎬</span>
+              <span>Watch Intro</span>
+            </motion.button>
+
             {/* Native Web Audio API Mute Toggle */}
             <motion.button
               onClick={handleToggleAudio}
@@ -393,20 +424,8 @@ export default function App() {
                     position: 'relative',
                     overflow: 'hidden'
                   }}>
-                    {/* 3D Banana Hero */}
-                    <Suspense fallback={
-                      <div style={{ height: '280px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <motion.span
-                          animate={{ rotate: 360 }}
-                          transition={{ repeat: Infinity, duration: 2, ease: 'linear' }}
-                          style={{ fontSize: '3rem' }}
-                        >
-                          🍌
-                        </motion.span>
-                      </div>
-                    }>
-                      <Banana3D height="280px" />
-                    </Suspense>
+                    {/* Authentic Minion Scientist Hero Centerpiece */}
+                    <MinionCenterpiece onTriggerIntro={() => setShowCinematicIntro(true)} />
 
                     <motion.div
                       initial={{ opacity: 0, y: 20 }}

@@ -213,10 +213,34 @@ export default function GameOverModal({ stats, currentUser, onPlayAgain, onRetur
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.55 }}
-            style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}
+            style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}
           >
             {grade.description}
           </motion.p>
+
+          {/* Minion Laboratory Quote */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.6 }}
+            style={{
+              display: 'inline-block',
+              background: 'rgba(255, 215, 0, 0.1)',
+              border: '1px solid rgba(255, 215, 0, 0.4)',
+              color: '#FFD700',
+              fontWeight: 700,
+              fontSize: '0.85rem',
+              padding: '0.4rem 1rem',
+              borderRadius: '20px',
+              marginBottom: '1.25rem'
+            }}
+          >
+            {grade.id === 'S' ? '🍌 “BANANAAA! MEGA MINION SUPREME GENIUS!” 🚀' :
+             grade.id === 'A' ? '⭐ “Tulaliloo! Senior Lab Mathematician!”' :
+             grade.id === 'B' ? '💛 “Bello! Certified Banana Engineer!”' :
+             grade.id === 'C' ? '🔬 “Poopaye! Good effort junior apprentice!”' :
+             '🍌 “Needs more bananas! Try again!”'}
+          </motion.div>
 
           {/* Leaderboard High Score Banner */}
           <AnimatePresence>

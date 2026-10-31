@@ -11,21 +11,29 @@
   --bg-glass: rgba(17, 24, 39, 0.75);
   --bg-glass-elevated: rgba(26, 34, 56, 0.85);
 
-  /* Brand Accents */
-  --accent-gold: #F59E0B;
-  --accent-gold-glow: rgba(245, 158, 11, 0.35);
-  --accent-yellow: #FBBF24;
-  --accent-cyan: #06B6D4;
+  /* Brand Accents — Authentic Minion Palette */
+  --minion-yellow: #FFD200;
+  --minion-yellow-bright: #FFE600;
+  --minion-denim: #1E4E7A;
+  --minion-denim-dark: #123456;
+  --minion-stitching: 2px dashed #FFD200;
+  
+  --accent-gold: #FFD200;
+  --accent-gold-glow: rgba(255, 210, 0, 0.45);
+  --accent-yellow: #FFE600;
+  --accent-cyan: #38BDF8;
   --accent-purple: #8B5CF6;
   --accent-emerald: #10B981;
-  --accent-rose: #F43F5E;
+  --accent-rose: #EF4444;
 
   /* Gradients */
-  --grad-banana: linear-gradient(135deg, #F59E0B 0%, #FBBF24 50%, #FCD34D 100%);
+  --grad-banana: linear-gradient(135deg, #FFD200 0%, #FFE600 50%, #FBBF24 100%);
+  --grad-denim: linear-gradient(135deg, #2E6B9E 0%, #1E4E7A 50%, #123456 100%);
+  --grad-chrome: linear-gradient(135deg, #FFFFFF 0%, #D1D5DB 35%, #9CA3AF 70%, #4B5563 100%);
   --grad-cyber: linear-gradient(135deg, #8B5CF6 0%, #3B82F6 50%, #06B6D4 100%);
-  --grad-danger: linear-gradient(135deg, #F43F5E 0%, #FB7185 100%);
+  --grad-danger: linear-gradient(135deg, #EF4444 0%, #F87171 100%);
   --grad-success: linear-gradient(135deg, #10B981 0%, #34D399 100%);
-  --grad-surface: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0) 100%);
+  --grad-surface: linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0) 100%);
 
   /* Borders & Dividers */
   --border-subtle: rgba(255, 255, 255, 0.08);
@@ -451,4 +459,78 @@ h1, h2, h3, h4, h5, h6 {
 
 .feedback-wrong {
   animation: shake 0.5s ease-out;
+}
+
+/* ===== Authentic Real Minion Theme Components ===== */
+
+/* Minion Overalls Denim Panel */
+.minion-denim-card {
+  background: var(--grad-denim);
+  border: 2px dashed var(--minion-yellow);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  position: relative;
+  overflow: hidden;
+  transition: all var(--transition-bounce);
+}
+
+.minion-denim-card::before {
+  content: '';
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  right: 6px;
+  bottom: 6px;
+  border: 1px dashed rgba(255, 210, 0, 0.3);
+  border-radius: calc(var(--radius-lg) - 6px);
+  pointer-events: none;
+}
+
+.minion-denim-card:hover {
+  transform: translateY(-4px) scale(1.02);
+  border-color: #FFF;
+  box-shadow: 0 14px 35px rgba(0, 0, 0, 0.6), 0 0 25px rgba(255, 210, 0, 0.25);
+}
+
+/* Gru Laboratory Warning Hazard Tape */
+.hazard-tape {
+  background: repeating-linear-gradient(
+    -45deg,
+    #FFD200,
+    #FFD200 12px,
+    #111827 12px,
+    #111827 24px
+  );
+  height: 6px;
+  width: 100%;
+}
+
+/* Minion Goggle Badge Icon */
+.goggle-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 6px;
+  background: #1F2937;
+  border-radius: 12px;
+  border: 1px solid #4B5563;
+}
+
+.goggle-eye {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--grad-chrome);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.6);
+}
+
+.goggle-pupil {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #78350F;
+  border: 1px solid #000;
 }
