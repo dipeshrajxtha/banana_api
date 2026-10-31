@@ -37,6 +37,7 @@ export default function MultiplayerArena({ currentUser, initialRoomId = null, on
   const [copiedLink, setCopiedLink] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
+  const [joinCodeInput, setJoinCodeInput] = useState('');
 
   // Local Player Gameplay state
   const [selectedDigit, setSelectedDigit] = useState(null);
@@ -364,13 +365,25 @@ if (!roomState || roomState.status === 'waiting') {
       )}
 
       {!roomState ? (
-        /* Step 1: Select Timer & Create Room */
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', alignItems: 'center' }}>
-          <div>
-            <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              Select Battle Duration
+        /* Step 1: Select Timer & Create Room OR Join with Code */
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem', alignItems: 'center', width: '100%' }}>
+          {/* Option A: Host a Duel */}
+          <div style={{
+            width: '100%',
+            maxWidth: '520px',
+            background: 'rgba(255, 255, 255, 0.03)',
+            padding: '1.5rem',
+            borderRadius: '16px',
+            border: '1px solid rgba(255, 215, 0, 0.3)'
+          }}>
+            <div style={{ fontSize: '1.1rem', fontWeight: 900, color: '#FFD700', marginBottom: '0.25rem' }}>
+              🍌 HOST A NEW DUEL
             </div>
-            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+            <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
+              Pick match duration and create a battle room
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', marginBottom: '1.25rem' }}>
               {[3, 5, 7].map((mins) => (
                 <motion.button
                   key={mins}
@@ -378,41 +391,122 @@ if (!roomState || roomState.status === 'waiting') {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   style={{
-                    padding: '0.8rem 1.8rem',
-                    borderRadius: '12px',
+                    flex: 1,
+                    padding: '0.75rem 0.5rem',
+                    borderRadius: '10px',
                     border: selectedTimerMin === mins ? '2px solid #FFD700' : '1px solid rgba(255,255,255,0.1)',
                     background: selectedTimerMin === mins ? 'linear-gradient(135deg, #FFD700 0%, #F59E0B 100%)' : 'rgba(255,255,255,0.05)',
                     color: selectedTimerMin === mins ? '#000' : '#FFF',
                     fontWeight: 800,
-                    fontSize: '1.1rem',
+                    fontSize: '1rem',
                     cursor: 'pointer',
-                    boxShadow: selectedTimerMin === mins ? '0 0 20px rgba(255, 215, 0, 0.3)' : 'none'
+                    boxShadow: selectedTimerMin === mins ? '0 0 15px rgba(255, 215, 0, 0.3)' : 'none'
                   }}
                 >
-                  ⏱️ {mins} Minutes
+                  ⏱️ {mins} Min
                 </motion.button>
               ))}
             </div>
+
+            <motion.button
+              onClick={handleCreateRoom}
+              disabled={loading}
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              className="btn-primary"
+              style={{
+                width: '100%',
+                padding: '0.9rem',
+                fontSize: '1.1rem',
+                fontWeight: 900
+              }}
+            >
+              {loading ? 'Creating Secret Lab Chamber...' : '🍌 CREATE BATTLE ROOM'}
+            </motion.button>
           </div>
 
-          <motion.button
-            onClick={handleCreateRoom}
-            disabled={loading}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="btn-primary"
-            style={{
-              padding: '1rem 2.5rem',
-              fontSize: '1.2rem',
-              fontWeight: 900,
-              marginTop: '1rem',
-              boxShadow: '0 0 30px rgba(255, 215, 0, 0.4)'
-            }}
-          >
-            {loading ? 'Creating Secret Lab Chamber...' : '🍌 CREATE BATTLE ROOM'}
-          </motion.button>
+          {/* Divider */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '1rem',
+            width: '100%',
+            maxWidth: '520px',
+            color: 'var(--text-muted)',
+            fontSize: '0.8rem',
+            fontWeight: 800,
+            letterSpacing: '0.05em'
+          }}>
+            <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.1)' }} />
+            <span>OR ENTER A ROOM CODE</span>
+            <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.1)' }} />
+          </div>
 
-          <button onClick={onQuit} className="btn-secondary" style={{ marginTop: '0.5rem', fontSize: '0.85rem' }}>
+          {/* Option B: Join an Existing Room via Code */}
+          <div style={{
+            width: '100%',
+            maxWidth: '520px',
+            background: 'rgba(255, 255, 255, 0.03)',
+            padding: '1.5rem',
+            borderRadius: '16px',
+            border: '1px solid rgba(56, 189, 248, 0.3)'
+          }}>
+            <div style={{ fontSize: '1.1rem', fontWeight: 900, color: '#38BDF8', marginBottom: '0.25rem' }}>
+              🚀 JOIN A FRIEND&apos;S ROOM
+            </div>
+            <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
+              Enter the room code shared by your friend (e.g. MIN-XXXX)
+            </div>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (joinCodeInput.trim()) {
+                  handleJoinRoom(joinCodeInput.trim().toUpperCase());
+                }
+              }}
+              style={{ display: 'flex', gap: '0.75rem' }}
+            >
+              <input
+                type="text"
+                placeholder="MIN-XXXX"
+                value={joinCodeInput}
+                onChange={(e) => setJoinCodeInput(e.target.value.toUpperCase())}
+                maxLength={10}
+                style={{
+                  flex: 1,
+                  padding: '0.8rem 1rem',
+                  borderRadius: '10px',
+                  background: 'rgba(0,0,0,0.5)',
+                  border: '1px solid rgba(56, 189, 248, 0.4)',
+                  color: '#FFD700',
+                  fontSize: '1.2rem',
+                  fontWeight: 900,
+                  letterSpacing: '0.1em',
+                  textAlign: 'center',
+                  fontFamily: 'var(--font-mono)'
+                }}
+              />
+              <motion.button
+                type="submit"
+                disabled={loading || !joinCodeInput.trim()}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="btn-secondary"
+                style={{
+                  padding: '0.8rem 1.5rem',
+                  borderColor: '#38BDF8',
+                  color: '#38BDF8',
+                  fontWeight: 800,
+                  fontSize: '1rem'
+                }}
+              >
+                Join
+              </motion.button>
+            </form>
+          </div>
+
+          <button onClick={onQuit} className="btn-secondary" style={{ fontSize: '0.85rem' }}>
             Cancel &amp; Return Home
           </button>
         </div>
@@ -425,7 +519,7 @@ if (!roomState || roomState.status === 'waiting') {
             borderRadius: '16px',
             border: '1px solid rgba(255,215,0,0.3)',
             width: '100%',
-            maxWidth: '500px'
+            maxWidth: '520px'
           }}>
             <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
               ROOM CODE
@@ -455,6 +549,29 @@ if (!roomState || roomState.status === 'waiting') {
             <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.75rem' }}>
               Send this link to your friend. When they open it, both screens connect automatically!
             </div>
+
+            {typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (
+              <div style={{
+                background: 'rgba(245, 158, 11, 0.12)',
+                border: '1px solid rgba(245, 158, 11, 0.35)',
+                borderRadius: '8px',
+                padding: '0.75rem',
+                marginTop: '1rem',
+                fontSize: '0.8rem',
+                color: '#FDE68A',
+                textAlign: 'left',
+                lineHeight: 1.5
+              }}>
+                <div style={{ fontWeight: 800, marginBottom: '0.25rem', color: '#FFD700' }}>
+                  📱 Playing on another phone or device?
+                </div>
+                <div>
+                  • <strong>Same Wi-Fi</strong>: On your phone/laptop, open your computer&apos;s network URL (e.g. <code>http://192.168.x.x:3000</code>).<br />
+                  • <strong>Over the Internet</strong>: Open a tunnel via <code>npx localtunnel --port 3000</code> or ngrok.<br />
+                  • Your friend can also simply open the game and type Room Code: <strong>{roomState.id}</strong>!
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Pulsing Radar Animation */}

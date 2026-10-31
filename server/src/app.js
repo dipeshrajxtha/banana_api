@@ -35,7 +35,7 @@ app.use(helmet({
 
 // 2. CORS (Cross-Origin Resource Sharing)
 app.use(cors({
-  origin: config.clientUrl,
+  origin: config.isProduction ? config.clientUrl : true,
   credentials: true
 }));
 

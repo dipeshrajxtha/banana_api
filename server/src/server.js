@@ -19,9 +19,9 @@ async function bootstrap() {
     await seedAdmin();
 
 
-    // 2. Start HTTP Listener
-    const server = app.listen(config.port, () => {
-      console.log(`🍌 Banana Quest Server running on http://localhost:${config.port} [${config.nodeEnv}]`);
+    // 2. Start HTTP Listener (binds to 0.0.0.0 for LAN & external connectivity)
+    const server = app.listen(config.port, '0.0.0.0', () => {
+      console.log(`🍌 Banana Quest Server running on http://localhost:${config.port} [${config.nodeEnv}] (0.0.0.0)`);
     });
 
     // Graceful Shutdown Handlers
