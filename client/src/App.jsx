@@ -65,15 +65,18 @@ export default function App() {
   useEffect(() => {
     soundService.bindToEventBus();
 
-    const interval = setInterval(() => {
-      setBusEvents(eventBus.getHistory());
-    }, 1000);
+    let interval = null;
+    if (activeTab === 'architecture') {
+      interval = setInterval(() => {
+        setBusEvents(eventBus.getHistory());
+      }, 1000);
+    }
 
     return () => {
       soundService.unbindEventBus();
-      clearInterval(interval);
+      if (interval) clearInterval(interval);
     };
-  }, []);
+  }, [activeTab]);
 
   // Check for active session cookie on application mount
   useEffect(() => {
@@ -131,9 +134,8 @@ export default function App() {
       return;
     }
     setGameOverStats(null);
-    // Show match intro countdown first
-    setIntroMode(mode);
-    setShowIntro(true);
+    setShowIntro(false);
+    setActiveGameMode(mode); // Immediate launch without 1-second countdown delay
   };
 
   const handleIntroComplete = () => {

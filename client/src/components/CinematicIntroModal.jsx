@@ -21,34 +21,46 @@ export default function CinematicIntroModal({ isOpen, onClose, onStartGame, onSt
   const [hasEnded, setHasEnded] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const containerRef = useRef(null);
+  const prevIsOpenRef = useRef(false);
+  const onCloseRef = useRef(onClose);
 
-  // Auto-play video when modal opens
   useEffect(() => {
-    if (!isOpen) {
+    onCloseRef.current = onClose;
+  });
+
+  // Control video strictly when isOpen changes (does NOT reset on parent re-renders)
+  useEffect(() => {
+    if (isOpen && !prevIsOpenRef.current) {
+      prevIsOpenRef.current = true;
+      const video = videoRef.current;
+      if (video) {
+        video.currentTime = 0;
+        setHasEnded(false);
+        setIsPlaying(true);
+        video.play().catch(() => {
+          // Fallback to muted if browser blocks unmuted autoplay
+          video.muted = true;
+          setIsMuted(true);
+          video.play().catch(() => setIsPlaying(false));
+        });
+      }
+    } else if (!isOpen && prevIsOpenRef.current) {
+      prevIsOpenRef.current = false;
       if (videoRef.current) {
         videoRef.current.pause();
         videoRef.current.currentTime = 0;
       }
       setHasEnded(false);
-      return;
     }
+  }, [isOpen]);
 
-    const video = videoRef.current;
-    if (video) {
-      video.currentTime = 0;
-      setHasEnded(false);
-      setIsPlaying(true);
-      video.play().catch(() => {
-        // Fallback to muted if browser blocks unmuted autoplay
-        video.muted = true;
-        setIsMuted(true);
-        video.play().catch(() => setIsPlaying(false));
-      });
-    }
+  // Keyboard shortcut listeners (active only when open)
+  useEffect(() => {
+    if (!isOpen) return;
 
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
-        onClose();
+        onCloseRef.current?.();
       } else if (e.key === ' ' || e.key === 'k') {
         e.preventDefault();
         togglePlay();
@@ -61,7 +73,7 @@ export default function CinematicIntroModal({ isOpen, onClose, onStartGame, onSt
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
+  }, [isOpen]);
 
   const togglePlay = () => {
     if (!videoRef.current) return;
@@ -240,6 +252,7 @@ export default function CinematicIntroModal({ isOpen, onClose, onStartGame, onSt
             <video
               ref={videoRef}
               src="/assets/intro.mp4"
+              preload="auto"
               playsInline
               onTimeUpdate={handleTimeUpdate}
               onLoadedMetadata={handleLoadedMetadata}
@@ -516,3 +529,4 @@ export default function CinematicIntroModal({ isOpen, onClose, onStartGame, onSt
     </AnimatePresence>
   );
 }
+
