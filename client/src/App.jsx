@@ -19,6 +19,7 @@ import MatchIntro from './components/MatchIntro.jsx';
 import FloatingPoints from './components/FloatingPoints.jsx';
 import MinionCenterpiece from './components/MinionCenterpiece.jsx';
 import MultiplayerArena from './components/MultiplayerArena.jsx';
+import CinematicIntroModal from './components/CinematicIntroModal.jsx';
 import { soundService } from './services/soundService.js';
 import { eventBus } from './events/eventBus.js';
 
@@ -26,6 +27,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('welcome');
   const [currentUser, setCurrentUser] = useState(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showCinematicModal, setShowCinematicModal] = useState(false);
   const [pendingGameMode, setPendingGameMode] = useState(null);
 
   // Audio & Event-Driven Engine State
@@ -217,6 +219,20 @@ export default function App() {
         )}
       </AnimatePresence>
 
+      {/* 3D Animated Cinematic Intro Video Player */}
+      <CinematicIntroModal
+        isOpen={showCinematicModal}
+        onClose={() => setShowCinematicModal(false)}
+        onStartGame={() => {
+          setShowCinematicModal(false);
+          handleStartGame(GAME_MODES.SPEED_RUSH);
+        }}
+        onStartMultiplayer={() => {
+          setShowCinematicModal(false);
+          setIsMultiplayerActive(true);
+        }}
+      />
+
       {/* Top Navigation Bar */}
       <header style={{
         borderBottom: '1px solid var(--border-subtle)',
@@ -286,6 +302,30 @@ export default function App() {
                 {tab.charAt(0).toUpperCase() + tab.slice(1)}
               </motion.button>
             ))}
+
+            {/* Watch Intro Video Button */}
+            <motion.button
+              onClick={() => setShowCinematicModal(true)}
+              className="btn-secondary"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              style={{
+                padding: '0.5rem 0.9rem',
+                fontSize: '0.85rem',
+                borderRadius: 'var(--radius-sm)',
+                borderColor: '#FFD700',
+                color: '#FFD700',
+                fontWeight: 700,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                background: 'rgba(255, 215, 0, 0.08)'
+              }}
+              title="Watch the official 3D animated cinematic intro video"
+            >
+              <span>🎬</span>
+              <span>Watch Intro</span>
+            </motion.button>
           </nav>
 
           {/* Audio Controls & Virtual Identity (Theme 2 & 4) */}
@@ -506,6 +546,23 @@ export default function App() {
                           style={{ fontSize: '1.05rem', padding: '0.9rem 1.75rem', borderColor: 'var(--accent-gold)', color: 'var(--accent-yellow)' }}
                         >
                           🎯 Perfect 10 Streak
+                        </motion.button>
+                        <motion.button
+                          onClick={() => setShowCinematicModal(true)}
+                          className="btn-secondary"
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          style={{
+                            fontSize: '1.05rem',
+                            padding: '0.9rem 1.75rem',
+                            borderColor: '#FFD700',
+                            color: '#FFD700',
+                            fontWeight: 800,
+                            background: 'rgba(255, 215, 0, 0.1)',
+                            boxShadow: '0 0 20px rgba(255, 215, 0, 0.2)'
+                          }}
+                        >
+                          🎬 Watch Cinematic Intro
                         </motion.button>
                       </motion.div>
                     </div>
