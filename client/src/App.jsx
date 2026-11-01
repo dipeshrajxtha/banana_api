@@ -23,6 +23,43 @@ import CinematicIntroModal from './components/CinematicIntroModal.jsx';
 import { soundService } from './services/soundService.js';
 import { eventBus } from './events/eventBus.js';
 
+// Helper to extract room code from any URL format:
+// ?room=MIN-8652, /room=MIN-8652, /room/MIN-8652, /MIN-8652, #room=MIN-8652
+function extractRoomCodeFromUrl() {
+  if (typeof window === 'undefined') return null;
+
+  // 1. Search Query Parameters (?room=XYZ or ?r=XYZ)
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const qRoom = params.get('room') || params.get('r');
+    if (qRoom && qRoom.trim()) return qRoom.trim().toUpperCase();
+  } catch {}
+
+  // 2. Pathname (/room=XYZ, /room/XYZ, /rooms/XYZ, /MIN-XXXX)
+  try {
+    const pathname = window.location.pathname || '';
+    const roomPrefixMatch = pathname.match(/(?:room|rooms)[\/=:]([A-Za-z0-9_-]+)/i);
+    if (roomPrefixMatch && roomPrefixMatch[1]) {
+      return roomPrefixMatch[1].trim().toUpperCase();
+    }
+    const minCodeMatch = pathname.match(/\b(MIN-[A-Za-z0-9]+)\b/i);
+    if (minCodeMatch && minCodeMatch[1]) {
+      return minCodeMatch[1].trim().toUpperCase();
+    }
+  } catch {}
+
+  // 3. Hash fragment (#room=XYZ or #MIN-XXXX)
+  try {
+    const hash = window.location.hash || '';
+    const hashMatch = hash.match(/(?:room|rooms)[\/=:]([A-Za-z0-9_-]+)|\b(MIN-[A-Za-z0-9]+)\b/i);
+    if (hashMatch) {
+      return (hashMatch[1] || hashMatch[2]).trim().toUpperCase();
+    }
+  } catch {}
+
+  return null;
+}
+
 export default function App() {
   const [activeTab, setActiveTab] = useState('welcome');
   const [currentUser, setCurrentUser] = useState(null);
@@ -43,14 +80,22 @@ export default function App() {
   const [introMode, setIntroMode] = useState(null);
 
   // Multiplayer 1v1 Room Battle State
-  const [multiplayerRoomId, setMultiplayerRoomId] = useState(() => {
-    const params = new URLSearchParams(window.location.search);
-    return params.get('room');
-  });
-  const [isMultiplayerActive, setIsMultiplayerActive] = useState(() => {
-    const params = new URLSearchParams(window.location.search);
-    return Boolean(params.get('room'));
-  });
+  const [multiplayerRoomId, setMultiplayerRoomId] = useState(() => extractRoomCodeFromUrl());
+  const [isMultiplayerActive, setIsMultiplayerActive] = useState(() => Boolean(extractRoomCodeFromUrl()));
+
+  // Listen for browser navigation / popstate URL changes
+  useEffect(() => {
+    const handleUrlChange = () => {
+      const detectedRoom = extractRoomCodeFromUrl();
+      if (detectedRoom) {
+        setMultiplayerRoomId(detectedRoom);
+        setIsMultiplayerActive(true);
+      }
+    };
+
+    window.addEventListener('popstate', handleUrlChange);
+    return () => window.removeEventListener('popstate', handleUrlChange);
+  }, []);
 
   // Architecture telemetry state
   const [telemetryData, setTelemetryData] = useState(null);
