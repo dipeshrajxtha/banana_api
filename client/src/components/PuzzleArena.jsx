@@ -164,13 +164,16 @@ export default function PuzzleArena({ gameMode = GAME_MODES.SPEED_RUSH, onGameOv
     }
   }, []);
 
-  // Start round on component mount
+  // Start round on component mount and clean up on unmount
   useEffect(() => {
     eventBus.emit(GAME_EVENTS.GAME_STARTED, { gameMode });
     fetchNextPuzzle();
     if (hasTimer) {
       timer.start(durationMs);
     }
+    return () => {
+      timer.stop();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

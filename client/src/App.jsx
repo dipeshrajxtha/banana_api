@@ -284,78 +284,77 @@ export default function App() {
         }}
       />
 
-      {/* Top Cyber Navigation Bar (Game HUD Style) */}
+      {/* Top Cyber Navigation Bar (Sleek AAA Game HUD Style) */}
       <header style={{
-        borderBottom: '1px solid rgba(0, 240, 255, 0.25)',
-        background: 'rgba(4, 7, 18, 0.94)',
-        backdropFilter: 'blur(20px)',
         position: 'sticky',
         top: 0,
         zIndex: 50,
-        boxShadow: '0 4px 30px rgba(0, 0, 0, 0.8), 0 0 20px rgba(0, 240, 255, 0.08)'
+        background: 'rgba(3, 7, 18, 0.92)',
+        backdropFilter: 'blur(20px)',
+        borderBottom: '1px solid rgba(0, 240, 255, 0.2)',
+        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.7)'
       }}>
         <div style={{
           maxWidth: '1240px',
           margin: '0 auto',
-          padding: '0.85rem 1.5rem',
+          padding: '0.65rem 1.25rem',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          gap: '1rem',
-          flexWrap: 'wrap'
+          gap: '1rem'
         }}>
-          {/* Logo & Unit Branding */}
+          {/* Logo */}
           <motion.div
             onClick={() => { setActiveGameMode(null); setActiveTab('welcome'); }}
-            style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer', flexShrink: 0 }}
+            style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer', flexShrink: 0 }}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
-            <motion.div
-              animate={{ rotate: [0, -10, 10, -5, 5, 0], scale: [1, 1.08, 1] }}
-              transition={{ repeat: Infinity, duration: 3, repeatDelay: 4 }}
-              style={{
-                fontSize: '1.9rem',
-                filter: 'drop-shadow(0 0 12px rgba(0, 240, 255, 0.6))'
-              }}
+            <motion.span
+              animate={{ rotate: [0, -10, 10, 0] }}
+              transition={{ repeat: Infinity, duration: 4, repeatDelay: 3 }}
+              style={{ fontSize: '1.75rem', filter: 'drop-shadow(0 0 8px rgba(0, 240, 255, 0.6))' }}
             >
               🍌
-            </motion.div>
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <h1 style={{
-                  fontSize: '1.25rem',
-                  fontWeight: 900,
-                  letterSpacing: '0.04em',
-                  margin: 0,
-                  color: '#FFFFFF',
-                  fontFamily: 'var(--font-display)'
-                }}>
-                  BANANA <span style={{
-                    background: 'linear-gradient(135deg, #00F0FF 0%, #FFD700 100%)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent'
-                  }}>QUEST</span>
-                </h1>
-                <span className="cyber-badge" style={{ fontSize: '0.65rem', padding: '0.15rem 0.45rem' }}>MK-IV</span>
-              </div>
-              <p style={{ fontSize: '0.72rem', color: '#38BDF8', margin: 0, fontFamily: 'var(--font-mono)', letterSpacing: '0.06em' }}>
-                QUANTUM LAB // CIS046-3
-              </p>
-            </div>
+            </motion.span>
+            <h1 style={{
+              fontSize: '1.2rem',
+              fontWeight: 900,
+              letterSpacing: '0.06em',
+              margin: 0,
+              color: '#FFFFFF',
+              fontFamily: 'var(--font-display)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.35rem'
+            }}>
+              BANANA <span style={{
+                background: 'linear-gradient(135deg, #00F0FF 0%, #FFD700 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent'
+              }}>QUEST</span>
+            </h1>
           </motion.div>
 
-          {/* Navigation Links — High-Tech Gaming HUD Tabs */}
-          <nav style={{ display: 'flex', gap: '0.45rem', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
+          {/* Navigation Links — Clean Pill Navigation */}
+          <nav style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.3rem',
+            background: 'rgba(255, 255, 255, 0.04)',
+            padding: '0.25rem',
+            borderRadius: '10px',
+            border: '1px solid rgba(255, 255, 255, 0.08)'
+          }}>
             {[
-              { id: 'welcome', label: 'COMMAND DECK', icon: '⚡' },
-              { id: 'modes', label: 'MISSION MODES', icon: '🎮' },
-              { id: 'leaderboard', label: 'GLOBAL PODIUM', icon: '🏆' },
+              { id: 'welcome', label: 'DECK', icon: '⚡' },
+              { id: 'modes', label: 'MODES', icon: '🎮' },
+              { id: 'leaderboard', label: 'PODIUM', icon: '🏆' },
               { id: 'architecture', label: 'TELEMETRY', icon: '🔬' }
             ].map(tab => {
               const isActive = activeTab === tab.id && !activeGameMode;
               return (
-                <motion.button
+                <button
                   key={tab.id}
                   onClick={() => {
                     setActiveGameMode(null);
@@ -365,110 +364,102 @@ export default function App() {
                       setBusEvents(eventBus.getHistory());
                     }
                   }}
-                  whileHover={{ scale: 1.04 }}
-                  whileTap={{ scale: 0.96 }}
                   style={{
-                    padding: '0.45rem 0.85rem',
-                    fontSize: '0.8rem',
+                    padding: '0.4rem 0.85rem',
+                    fontSize: '0.78rem',
                     fontFamily: 'var(--font-mono)',
                     fontWeight: 700,
-                    letterSpacing: '0.05em',
-                    borderRadius: '6px',
-                    border: isActive ? '1px solid #00F0FF' : '1px solid rgba(255, 255, 255, 0.08)',
-                    background: isActive ? 'rgba(0, 240, 255, 0.15)' : 'rgba(255, 255, 255, 0.03)',
-                    color: isActive ? '#00F0FF' : 'rgba(255, 255, 255, 0.7)',
-                    boxShadow: isActive ? '0 0 15px rgba(0, 240, 255, 0.3)' : 'none',
+                    letterSpacing: '0.04em',
+                    borderRadius: '7px',
+                    border: 'none',
+                    background: isActive ? 'linear-gradient(135deg, rgba(0, 240, 255, 0.25) 0%, rgba(2, 132, 199, 0.3) 100%)' : 'transparent',
+                    color: isActive ? '#00F0FF' : 'rgba(255, 255, 255, 0.65)',
+                    boxShadow: isActive ? '0 0 12px rgba(0, 240, 255, 0.25)' : 'none',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '0.4rem',
-                    transition: 'all 0.2s ease',
+                    gap: '0.35rem',
+                    transition: 'all 0.15s ease',
                     whiteSpace: 'nowrap'
                   }}
                 >
-                  <span style={{ fontSize: '0.9rem' }}>{tab.icon}</span>
+                  <span style={{ fontSize: '0.85rem' }}>{tab.icon}</span>
                   <span>{tab.label}</span>
-                </motion.button>
+                </button>
               );
             })}
+          </nav>
 
-            {/* Replay Cinematic Cutscene Button */}
-            <motion.button
+          {/* Right Controls: Intro, Audio, Auth */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
+            {/* Cutscene Button */}
+            <button
               onClick={() => setShowCinematicModal(true)}
-              whileHover={{ scale: 1.05, boxShadow: '0 0 20px rgba(0, 240, 255, 0.5)' }}
-              whileTap={{ scale: 0.95 }}
               style={{
-                padding: '0.45rem 0.9rem',
-                fontSize: '0.8rem',
+                padding: '0.4rem 0.75rem',
+                fontSize: '0.76rem',
                 fontFamily: 'var(--font-mono)',
-                fontWeight: 800,
-                letterSpacing: '0.05em',
-                borderRadius: '6px',
-                border: '1.5px solid #00F0FF',
-                color: '#00F0FF',
-                background: 'rgba(0, 240, 255, 0.1)',
+                fontWeight: 700,
+                borderRadius: '8px',
+                border: '1px solid rgba(0, 240, 255, 0.3)',
+                color: '#38BDF8',
+                background: 'rgba(0, 240, 255, 0.06)',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '0.45rem',
-                boxShadow: '0 0 12px rgba(0, 240, 255, 0.25)',
-                transition: 'all 0.2s ease',
-                whiteSpace: 'nowrap'
+                gap: '0.35rem',
+                transition: 'all 0.15s ease'
               }}
-              title="Watch the official 3D animated cinematic intro cutscene"
+              title="Watch full cinematic intro cutscene"
             >
               <span>🎬</span>
-              <span>PLAY INTRO</span>
-            </motion.button>
-          </nav>
+              <span>INTRO</span>
+            </button>
 
-          {/* Audio Controls & Virtual Identity (Theme 2 & 4) */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexWrap: 'wrap', justifyContent: 'flex-end', flexShrink: 0 }}>
-            {/* Native Web Audio API Mute Toggle */}
-            <motion.button
+            {/* Audio Toggle */}
+            <button
               onClick={handleToggleAudio}
-              whileTap={{ scale: 0.92 }}
               style={{
-                padding: '0.4rem 0.75rem',
-                fontSize: '0.78rem',
-                fontFamily: 'var(--font-mono)',
-                fontWeight: 700,
+                width: '34px',
+                height: '34px',
+                borderRadius: '8px',
+                border: isMuted ? '1px solid rgba(255, 255, 255, 0.15)' : '1px solid rgba(0, 240, 255, 0.35)',
+                background: isMuted ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 240, 255, 0.1)',
+                color: isMuted ? 'rgba(255, 255, 255, 0.4)' : '#00F0FF',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '0.4rem',
-                borderRadius: '6px',
-                border: isMuted ? '1px solid rgba(255, 255, 255, 0.15)' : '1px solid rgba(0, 240, 255, 0.4)',
-                background: isMuted ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 240, 255, 0.08)',
-                color: isMuted ? 'rgba(255, 255, 255, 0.5)' : '#00F0FF',
-                cursor: 'pointer'
+                justifyContent: 'center',
+                cursor: 'pointer',
+                fontSize: '0.9rem',
+                transition: 'all 0.15s ease'
               }}
-              title={isMuted ? 'Unmute Sound Effects' : 'Mute Sound Effects'}
+              title={isMuted ? 'Unmute Audio' : 'Mute Audio'}
             >
-              <span>{isMuted ? '🔇' : '🔊'}</span>
-              <span>{isMuted ? 'MUTED' : 'SYNTH ON'}</span>
-            </motion.button>
+              {isMuted ? '🔇' : '🔊'}
+            </button>
 
+            {/* Virtual Identity */}
             {currentUser ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
                 <div style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '0.5rem',
-                  padding: '0.3rem 0.65rem',
-                  borderRadius: '20px',
-                  background: 'rgba(0, 240, 255, 0.08)',
-                  border: '1px solid rgba(0, 240, 255, 0.3)'
+                  gap: '0.45rem',
+                  padding: '0.25rem 0.6rem',
+                  borderRadius: '16px',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid rgba(0, 240, 255, 0.25)'
                 }}>
                   {currentUser.avatarUrl ? (
                     <img
                       src={currentUser.avatarUrl}
-                      alt={currentUser.username}
-                      style={{ width: '28px', height: '28px', borderRadius: '50%', border: '1.5px solid #00F0FF' }}
+                      alt=""
+                      style={{ width: '22px', height: '22px', borderRadius: '50%' }}
                     />
                   ) : (
                     <div style={{
-                      width: '28px',
-                      height: '28px',
+                      width: '22px',
+                      height: '22px',
                       borderRadius: '50%',
                       background: 'linear-gradient(135deg, #00F0FF, #0284C7)',
                       color: '#000',
@@ -476,55 +467,53 @@ export default function App() {
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      fontSize: '0.85rem'
+                      fontSize: '0.72rem'
                     }}>
                       {currentUser.username.charAt(0).toUpperCase()}
                     </div>
                   )}
-                  <div style={{ textAlign: 'left' }}>
-                    <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#FFFFFF', lineHeight: 1.1 }}>{currentUser.username}</div>
-                    <div style={{ fontSize: '0.65rem', color: '#38BDF8', fontFamily: 'var(--font-mono)' }}>
-                      {currentUser.authProvider === 'google' ? 'GOOGLE IDENTITY' : 'VIRTUAL GUEST'}
-                    </div>
-                  </div>
+                  <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#FFFFFF', maxWidth: '110px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {currentUser.username}
+                  </span>
                 </div>
 
                 <button
                   onClick={handleLogout}
                   style={{
-                    padding: '0.35rem 0.75rem',
-                    fontSize: '0.75rem',
+                    padding: '0.3rem 0.55rem',
+                    fontSize: '0.72rem',
+                    fontFamily: 'var(--font-mono)',
                     borderRadius: '6px',
-                    border: '1px solid rgba(239, 68, 68, 0.4)',
-                    background: 'rgba(239, 68, 68, 0.1)',
-                    color: '#FCA5A5',
+                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                    background: 'rgba(239, 68, 68, 0.08)',
+                    color: '#F87171',
                     cursor: 'pointer',
                     fontWeight: 700
                   }}
+                  title="Sign out"
                 >
                   LOGOUT
                 </button>
               </div>
             ) : (
-              <motion.button
+              <button
                 onClick={() => setShowAuthModal(true)}
-                whileHover={{ scale: 1.05, boxShadow: '0 0 20px rgba(0, 240, 255, 0.5)' }}
-                whileTap={{ scale: 0.95 }}
                 style={{
-                  padding: '0.45rem 1.15rem',
-                  fontSize: '0.82rem',
+                  padding: '0.4rem 0.9rem',
+                  fontSize: '0.78rem',
                   fontWeight: 800,
                   fontFamily: 'var(--font-mono)',
-                  letterSpacing: '0.05em',
-                  borderRadius: '6px',
-                  border: '1.5px solid #00F0FF',
+                  letterSpacing: '0.04em',
+                  borderRadius: '8px',
+                  border: '1px solid #00F0FF',
                   background: 'linear-gradient(135deg, rgba(0, 240, 255, 0.2) 0%, rgba(2, 132, 199, 0.2) 100%)',
                   color: '#00F0FF',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  boxShadow: '0 0 12px rgba(0, 240, 255, 0.2)'
                 }}
               >
-                🔐 SIGN IN / GUEST
-              </motion.button>
+                🔐 SIGN IN
+              </button>
             )}
           </div>
         </div>
