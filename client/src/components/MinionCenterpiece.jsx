@@ -3,8 +3,8 @@
  * @description Cyber-Minion Quantum AI Scientist — Modeled directly after the
  * Banana Quest 3D Cinematic Intro video. Features a futuristic cybernetic Minion
  * in a high-tech metallic nano-suit, glowing neon-cyan visor with holographic gaze tracking,
- * quantum banana arc reactor core, revolving 3D holographic data rings, and floating
- * sci-fi telemetry HUD displays matching the cinematic laboratory environment.
+ * quantum banana arc reactor core, revolving 3D holographic data rings, and a structured
+ * sci-fi telemetry HUD deck with zero component overlapping.
  * @module client/components/MinionCenterpiece
  * @author Dipesh Raj Shrestha
  * @reference University of Bedfordshire - CIS046-3 Software For Enterprise
@@ -58,8 +58,8 @@ export default function MinionCenterpiece({ onTriggerIntro }) {
       style={{
         position: 'relative',
         width: '100%',
-        maxWidth: '560px',
-        margin: '0 auto 1.5rem auto',
+        maxWidth: '720px',
+        margin: '0 auto 1.75rem auto',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -86,7 +86,7 @@ export default function MinionCenterpiece({ onTriggerIntro }) {
             borderRadius: '24px',
             border: '1.5px solid #00F0FF',
             boxShadow: '0 0 25px rgba(0, 240, 255, 0.45), 0 4px 12px rgba(0, 0, 0, 0.5)',
-            marginBottom: '0.75rem',
+            marginBottom: '1rem',
             position: 'relative',
             zIndex: 10,
             letterSpacing: '0.04em',
@@ -115,309 +115,266 @@ export default function MinionCenterpiece({ onTriggerIntro }) {
         </motion.div>
       </AnimatePresence>
 
-      {/* Floating Holographic Sci-Fi Telemetry Cards (Matching the Intro Video Lab) */}
-      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 1 }}>
-        {/* Top-Left: Quantum Mass Energy */}
-        <motion.div
-          animate={{ y: [0, -8, 0], opacity: [0.65, 0.95, 0.65] }}
-          transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut' }}
+      {/* Cyber-Minion 3D SVG Model with Revolving Quantum Arc Rings */}
+      <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        <motion.svg
+          width="280"
+          height="260"
+          viewBox="0 0 320 300"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          animate={{ y: [0, -6, 0] }}
+          transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
           style={{
-            position: 'absolute',
-            top: '8%',
-            left: '3%',
-            background: 'rgba(6, 182, 212, 0.12)',
-            border: '1px solid rgba(0, 240, 255, 0.45)',
-            boxShadow: '0 0 15px rgba(0, 240, 255, 0.2)',
-            borderRadius: '8px',
-            padding: '0.35rem 0.65rem',
-            fontFamily: 'var(--font-mono)',
-            fontSize: '0.75rem',
-            fontWeight: 800,
-            color: '#00F0FF'
+            filter: 'drop-shadow(0 15px 35px rgba(0, 240, 255, 0.35))',
+            position: 'relative',
+            zIndex: 5
           }}
         >
-          <div style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase' }}>CORE ENGINE</div>
-          <div>E = mc² + 🍌</div>
-        </motion.div>
+          <defs>
+            {/* Cybernetic Metallic Teal Alloy Gradient (From Video Model) */}
+            <radialGradient id="cyberChassis" cx="35%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#38BDF8" />
+              <stop offset="25%" stopColor="#0EA5E9" />
+              <stop offset="60%" stopColor="#0284C7" />
+              <stop offset="90%" stopColor="#075985" />
+              <stop offset="100%" stopColor="#082F49" />
+            </radialGradient>
 
-        {/* Top-Right: Holographic Hex Telemetry */}
-        <motion.div
-          animate={{ y: [0, 8, 0], opacity: [0.65, 0.95, 0.65] }}
-          transition={{ duration: 3.8, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
-          style={{
-            position: 'absolute',
-            top: '12%',
-            right: '4%',
-            background: 'rgba(245, 158, 11, 0.12)',
-            border: '1px solid rgba(255, 215, 0, 0.45)',
-            boxShadow: '0 0 15px rgba(255, 215, 0, 0.2)',
-            borderRadius: '8px',
-            padding: '0.35rem 0.65rem',
-            fontFamily: 'var(--font-mono)',
-            fontSize: '0.75rem',
-            fontWeight: 800,
-            color: '#FFD700'
-          }}
-        >
-          <div style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase' }}>QUANTUM FLUX</div>
-          <div>∇ × B = μ₀J_potassium</div>
-        </motion.div>
+            {/* Deep Titanium Outer Armor Shell */}
+            <linearGradient id="titaniumArmor" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor="#1E293B" />
+              <stop offset="50%" stopColor="#0F172A" />
+              <stop offset="100%" stopColor="#020617" />
+            </linearGradient>
 
-        {/* Bottom-Left: Velocity Vector */}
-        <motion.div
-          animate={{ y: [0, -6, 0], opacity: [0.55, 0.85, 0.55] }}
-          transition={{ duration: 4.1, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
-          style={{
-            position: 'absolute',
-            bottom: '15%',
-            left: '2%',
-            background: 'rgba(16, 185, 129, 0.12)',
-            border: '1px solid rgba(16, 185, 129, 0.45)',
-            boxShadow: '0 0 15px rgba(16, 185, 129, 0.2)',
-            borderRadius: '8px',
-            padding: '0.35rem 0.65rem',
-            fontFamily: 'var(--font-mono)',
-            fontSize: '0.75rem',
-            fontWeight: 800,
-            color: '#34D399'
-          }}
-        >
-          <div style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase' }}>VELOCITY STREAK</div>
-          <div>Δv = 9.81 × 10x</div>
-        </motion.div>
+            {/* Neon Hologram Cyan Visor Gradient */}
+            <linearGradient id="neonVisor" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#E0F2FE" />
+              <stop offset="25%" stopColor="#38BDF8" />
+              <stop offset="70%" stopColor="#0284C7" />
+              <stop offset="100%" stopColor="#00F0FF" />
+            </linearGradient>
 
-        {/* Bottom-Right: Matrix Frequency */}
-        <motion.div
-          animate={{ y: [0, 6, 0], opacity: [0.55, 0.85, 0.55] }}
-          transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut', delay: 1.5 }}
-          style={{
-            position: 'absolute',
-            bottom: '20%',
-            right: '2%',
-            background: 'rgba(168, 85, 247, 0.12)',
-            border: '1px solid rgba(168, 85, 247, 0.45)',
-            boxShadow: '0 0 15px rgba(168, 85, 247, 0.2)',
-            borderRadius: '8px',
-            padding: '0.35rem 0.65rem',
-            fontFamily: 'var(--font-mono)',
-            fontSize: '0.75rem',
-            fontWeight: 800,
-            color: '#C084FC'
-          }}
-        >
-          <div style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase' }}>SYSTEM STATE</div>
-          <div>CIS046-3_ACTIVE</div>
-        </motion.div>
+            {/* Arc Reactor Gold Core */}
+            <radialGradient id="bananaReactor" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#FFFFFF" />
+              <stop offset="30%" stopColor="#FFE600" />
+              <stop offset="70%" stopColor="#FFD700" />
+              <stop offset="100%" stopColor="#F59E0B" />
+            </radialGradient>
+          </defs>
+
+          {/* ─── Holographic 3D Orbiting Data Ring (Back Layer) ─── */}
+          <g style={{ transformOrigin: '160px 150px' }}>
+            <ellipse
+              cx="160"
+              cy="150"
+              rx="135"
+              ry="42"
+              stroke="#00F0FF"
+              strokeWidth="1.5"
+              strokeDasharray="6 8"
+              opacity="0.45"
+              transform="rotate(-18 160 150)"
+            />
+            <ellipse
+              cx="160"
+              cy="150"
+              rx="120"
+              ry="36"
+              stroke="#FFD700"
+              strokeWidth="1.2"
+              strokeDasharray="4 10"
+              opacity="0.35"
+              transform="rotate(22 160 150)"
+            />
+          </g>
+
+          {/* ─── Robotic Cybernetic Body Capsule (Pill Shape) ─── */}
+          <rect
+            x="95"
+            y="55"
+            width="130"
+            height="180"
+            rx="65"
+            fill="url(#cyberChassis)"
+            stroke="#00F0FF"
+            strokeWidth="2.5"
+            filter="drop-shadow(0 0 15px rgba(0, 240, 255, 0.4))"
+          />
+
+          {/* Armor Seam Panel Line */}
+          <path
+            d="M 98 145 Q 160 160 222 145"
+            stroke="#00F0FF"
+            strokeWidth="1.5"
+            strokeDasharray="3 3"
+            opacity="0.75"
+          />
+
+          {/* ─── Cybernetic Ear Antenna Nodes ─── */}
+          <rect x="83" y="115" width="14" height="24" rx="4" fill="#0EA5E9" stroke="#00F0FF" strokeWidth="1.5" />
+          <rect x="80" y="122" width="6" height="10" rx="2" fill="#00F0FF" />
+          <rect x="223" y="115" width="14" height="24" rx="4" fill="#0EA5E9" stroke="#00F0FF" strokeWidth="1.5" />
+          <rect x="234" y="122" width="6" height="10" rx="2" fill="#00F0FF" />
+
+          {/* ─── Cyber Visor Headset Band ─── */}
+          <rect x="94" y="105" width="132" height="30" rx="6" fill="url(#titaniumArmor)" stroke="#0284C7" strokeWidth="2" />
+
+          {/* ─── High-Tech Monolithic Visor Housing (From Cinematic Video) ─── */}
+          <rect
+            x="110"
+            y="95"
+            width="100"
+            height="50"
+            rx="25"
+            fill="#030712"
+            stroke="#00F0FF"
+            strokeWidth="2.5"
+            filter="drop-shadow(0 0 12px rgba(0, 240, 255, 0.6))"
+          />
+
+          {/* Visor Holographic Lens Screen */}
+          <rect
+            x="115"
+            y="100"
+            width="90"
+            height="40"
+            rx="20"
+            fill="url(#neonVisor)"
+            opacity="0.85"
+          />
+
+          {/* Visor Scanline Sweep */}
+          <line x1="120" y1="120" x2="200" y2="120" stroke="#FFFFFF" strokeWidth="1" opacity="0.6" strokeDasharray="2 4" />
+
+          {/* ─── Dynamic Hologram Gaze Tracking Optic Visor Pupils ─── */}
+          <g transform={`translate(${eyeOffset.x}, ${eyeOffset.y})`}>
+            {/* Left Optic Laser Pupil */}
+            <circle cx="145" cy="120" r="10" fill="#030712" />
+            <circle cx="145" cy="120" r="7" fill="#00F0FF" filter="drop-shadow(0 0 6px #00F0FF)" />
+            <circle cx="145" cy="120" r="3" fill="#FFFFFF" />
+            <circle cx="148" cy="117" r="1.5" fill="#FFFFFF" />
+
+            {/* Right Optic Laser Pupil */}
+            <circle cx="175" cy="120" r="10" fill="#030712" />
+            <circle cx="175" cy="120" r="7" fill="#00F0FF" filter="drop-shadow(0 0 6px #00F0FF)" />
+            <circle cx="175" cy="120" r="3" fill="#FFFFFF" />
+            <circle cx="178" cy="117" r="1.5" fill="#FFFFFF" />
+          </g>
+
+          {/* Visor Optic Pulse Overlay */}
+          {visorPulse && (
+            <rect
+              x="115"
+              y="100"
+              width="90"
+              height="40"
+              rx="20"
+              fill="#FFFFFF"
+              opacity="0.35"
+            />
+          )}
+
+          {/* ─── Cybernetic Chest Arc Reactor Core ("Potassium Fusion Engine") ─── */}
+          <circle cx="160" cy="188" r="20" fill="url(#titaniumArmor)" stroke="#00F0FF" strokeWidth="2" />
+          <circle cx="160" cy="188" r="14" fill="url(#bananaReactor)" filter="drop-shadow(0 0 14px #FFD700)" />
+          <text x="160" y="193" textAnchor="middle" fontSize="13" fill="#000000" fontWeight="900" fontFamily="sans-serif">⚡</text>
+
+          {/* ─── Robotic Nanotech Hands Holding Holographic Banana Crystal ─── */}
+          <g>
+            {/* Left Hand Clamp */}
+            <circle cx="112" cy="205" r="10" fill="#0284C7" stroke="#00F0FF" strokeWidth="1.5" />
+            {/* Right Hand Clamp */}
+            <circle cx="208" cy="205" r="10" fill="#0284C7" stroke="#00F0FF" strokeWidth="1.5" />
+
+            {/* Glowing Potassium Crystal Orb */}
+            <circle cx="160" cy="225" r="13" fill="#FFD700" opacity="0.85" filter="drop-shadow(0 0 15px #FFD700)" />
+            <text x="160" y="230" textAnchor="middle" fontSize="12">🍌</text>
+          </g>
+
+          {/* ─── Holographic 3D Orbiting Data Ring (Front Layer) ─── */}
+          <ellipse
+            cx="160"
+            cy="150"
+            rx="135"
+            ry="42"
+            stroke="#00F0FF"
+            strokeWidth="1.8"
+            strokeDasharray="14 12"
+            opacity="0.8"
+            transform="rotate(-18 160 150)"
+          />
+        </motion.svg>
       </div>
 
-      {/* Cyber-Minion 3D SVG Model (Directly matching the video's robotic sphere & sci-fi lab character) */}
-      <motion.svg
-        width="320"
-        height="300"
-        viewBox="0 0 320 300"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        animate={{ y: [0, -8, 0] }}
-        transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-        style={{
-          filter: 'drop-shadow(0 20px 45px rgba(0, 240, 255, 0.35))',
-          position: 'relative',
-          zIndex: 5
-        }}
-      >
-        <defs>
-          {/* Cybernetic Metallic Teal Alloy Gradient (From Video Model) */}
-          <radialGradient id="cyberChassis" cx="35%" cy="30%" r="70%">
-            <stop offset="0%" stopColor="#38BDF8" />
-            <stop offset="25%" stopColor="#0EA5E9" />
-            <stop offset="60%" stopColor="#0284C7" />
-            <stop offset="90%" stopColor="#075985" />
-            <stop offset="100%" stopColor="#082F49" />
-          </radialGradient>
+      {/* ─── Structured Holographic Subsystem Telemetry Deck (Clean, Non-Overlapping Layout) ─── */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
+        gap: '0.75rem',
+        width: '100%',
+        maxWidth: '640px',
+        marginTop: '0.75rem',
+        pointerEvents: 'none'
+      }}>
+        {/* Subsystem 1: Core Engine */}
+        <div style={{
+          background: 'rgba(6, 182, 212, 0.08)',
+          border: '1px solid rgba(0, 240, 255, 0.4)',
+          borderRadius: '8px',
+          padding: '0.45rem 0.65rem',
+          textAlign: 'center',
+          fontFamily: 'var(--font-mono)',
+          boxShadow: '0 0 12px rgba(0, 240, 255, 0.15)'
+        }}>
+          <div style={{ fontSize: '0.62rem', color: '#38BDF8', fontWeight: 800, textTransform: 'uppercase' }}>CORE ENGINE</div>
+          <div style={{ fontSize: '0.78rem', color: '#FFFFFF', fontWeight: 800, marginTop: '2px' }}>E = mc² + 🍌</div>
+        </div>
 
-          {/* Deep Titanium Outer Armor Shell */}
-          <linearGradient id="titaniumArmor" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#1E293B" />
-            <stop offset="50%" stopColor="#0F172A" />
-            <stop offset="100%" stopColor="#020617" />
-          </linearGradient>
+        {/* Subsystem 2: Quantum Flux */}
+        <div style={{
+          background: 'rgba(245, 158, 11, 0.08)',
+          border: '1px solid rgba(255, 215, 0, 0.4)',
+          borderRadius: '8px',
+          padding: '0.45rem 0.65rem',
+          textAlign: 'center',
+          fontFamily: 'var(--font-mono)',
+          boxShadow: '0 0 12px rgba(255, 215, 0, 0.15)'
+        }}>
+          <div style={{ fontSize: '0.62rem', color: '#FBBF24', fontWeight: 800, textTransform: 'uppercase' }}>QUANTUM FLUX</div>
+          <div style={{ fontSize: '0.78rem', color: '#FFFFFF', fontWeight: 800, marginTop: '2px' }}>∇ × B = μ₀J</div>
+        </div>
 
-          {/* Neon Hologram Cyan Visor Gradient */}
-          <linearGradient id="neonVisor" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#E0F2FE" />
-            <stop offset="25%" stopColor="#38BDF8" />
-            <stop offset="70%" stopColor="#0284C7" />
-            <stop offset="100%" stopColor="#00F0FF" />
-          </linearGradient>
+        {/* Subsystem 3: Velocity Multiplier */}
+        <div style={{
+          background: 'rgba(16, 185, 129, 0.08)',
+          border: '1px solid rgba(16, 185, 129, 0.4)',
+          borderRadius: '8px',
+          padding: '0.45rem 0.65rem',
+          textAlign: 'center',
+          fontFamily: 'var(--font-mono)',
+          boxShadow: '0 0 12px rgba(16, 185, 129, 0.15)'
+        }}>
+          <div style={{ fontSize: '0.62rem', color: '#34D399', fontWeight: 800, textTransform: 'uppercase' }}>VELOCITY</div>
+          <div style={{ fontSize: '0.78rem', color: '#FFFFFF', fontWeight: 800, marginTop: '2px' }}>Δv = 9.81 × 10x</div>
+        </div>
 
-          {/* Visor Glow Glow */}
-          <radialGradient id="visorCoreGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#FFFFFF" />
-            <stop offset="40%" stopColor="#00F0FF" />
-            <stop offset="85%" stopColor="#0284C7" />
-            <stop offset="100%" stopColor="transparent" />
-          </radialGradient>
-
-          {/* Quantum Arc Reactor Core (Chest) */}
-          <radialGradient id="arcReactor" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#FFFFFF" />
-            <stop offset="35%" stopColor="#38BDF8" />
-            <stop offset="70%" stopColor="#0284C7" />
-            <stop offset="100%" stopColor="#082F49" />
-          </radialGradient>
-
-          {/* Golden Quantum Banana Energy */}
-          <linearGradient id="quantumBanana" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#FFFBEB" />
-            <stop offset="30%" stopColor="#FDE047" />
-            <stop offset="70%" stopColor="#F59E0B" />
-            <stop offset="100%" stopColor="#D97706" />
-          </linearGradient>
-
-          {/* Sci-Fi Glow Filters */}
-          <filter id="cyanGlow" x="-30%" y="-30%" width="160%" height="160%">
-            <feGaussianBlur stdDeviation="6" result="blur" />
-            <feComposite in="SourceGraphic" in2="blur" operator="over" />
-          </filter>
-
-          <filter id="superGlow" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="12" result="blur" />
-            <feComposite in="SourceGraphic" in2="blur" operator="over" />
-          </filter>
-        </defs>
-
-        {/* Outer 3D Holographic Orbit Ring (Revolving in 3D Perspective) */}
-        <ellipse
-          cx="160"
-          cy="150"
-          rx="145"
-          ry="65"
-          fill="none"
-          stroke="url(#neonVisor)"
-          strokeWidth="1.5"
-          strokeDasharray="12 8"
-          transform="rotate(-15 160 150)"
-          style={{ opacity: 0.6 }}
-        />
-        <ellipse
-          cx="160"
-          cy="150"
-          rx="135"
-          ry="55"
-          fill="none"
-          stroke="#00F0FF"
-          strokeWidth="1"
-          strokeDasharray="6 14"
-          transform="rotate(25 160 150)"
-          style={{ opacity: 0.4 }}
-        />
-
-        {/* Shadow base under the floating model */}
-        <ellipse cx="160" cy="275" rx="75" ry="12" fill="rgba(0, 240, 255, 0.2)" filter="url(#cyanGlow)" />
-
-        {/* ─── CYBERNETIC CHASSIS (Sleek Futuristic Capsule Body from Video) ─── */}
-        <path
-          d="M85 110C85 62 118 25 160 25C202 25 235 62 235 110V185C235 228 202 255 160 255C118 255 85 228 85 185V110Z"
-          fill="url(#cyberChassis)"
-          stroke="#00F0FF"
-          strokeWidth="2.5"
-        />
-
-        {/* High-Tech Shell Segment Lines (Armor Seams) */}
-        <path d="M86 100C125 110 195 110 234 100" stroke="#00F0FF" strokeWidth="1.5" strokeOpacity="0.7" />
-        <path d="M86 195C125 205 195 205 234 195" stroke="#00F0FF" strokeWidth="1.5" strokeOpacity="0.7" />
-        <path d="M160 25V65" stroke="#00F0FF" strokeWidth="1.5" strokeOpacity="0.8" />
-        <path d="M160 220V255" stroke="#00F0FF" strokeWidth="1.5" strokeOpacity="0.8" />
-
-        {/* Side Titanium Exoskeleton Brackets */}
-        <rect x="74" y="110" width="12" height="60" rx="4" fill="url(#titaniumArmor)" stroke="#00F0FF" strokeWidth="1" />
-        <rect x="234" y="110" width="12" height="60" rx="4" fill="url(#titaniumArmor)" stroke="#00F0FF" strokeWidth="1" />
-
-        {/* ─── HOLOGRAPHIC CYBER-VISOR / OPTICAL SENSOR ─── */}
-        {/* Visor Frame (Curved Panoramic Carbon Shield) */}
-        <path
-          d="M95 80C115 75 205 75 225 80C235 84 235 125 225 130C205 135 115 135 95 130C85 125 85 84 95 80Z"
-          fill="url(#titaniumArmor)"
-          stroke="#00F0FF"
-          strokeWidth="2"
-        />
-
-        {/* Glowing Neon Visor Screen Glass */}
-        <path
-          d="M102 85C118 81 202 81 218 85C226 88 226 122 218 125C202 129 118 129 102 125C94 122 94 88 102 85Z"
-          fill="#030F26"
-          stroke="#38BDF8"
-          strokeWidth="1.5"
-        />
-
-        {/* Luminous Aqua Optical HUD Sweep (Gaze Tracking) */}
-        <g transform={`translate(${eyeOffset.x}, ${eyeOffset.y})`}>
-          {/* Dual Cyber Optic Lenses */}
-          {/* Left Sensor Eye */}
-          <circle cx="135" cy="105" r="16" fill="url(#visorCoreGlow)" filter="url(#cyanGlow)" />
-          <circle cx="135" cy="105" r="8" fill="#FFFFFF" />
-          <circle cx="135" cy="105" r="4" fill="#00F0FF" />
-          {/* Circular HUD Reticle */}
-          <circle cx="135" cy="105" r="18" fill="none" stroke="#00F0FF" strokeWidth="1" strokeDasharray="4 4" />
-
-          {/* Right Sensor Eye */}
-          <circle cx="185" cy="105" r="16" fill="url(#visorCoreGlow)" filter="url(#cyanGlow)" />
-          <circle cx="185" cy="105" r="8" fill="#FFFFFF" />
-          <circle cx="185" cy="105" r="4" fill="#00F0FF" />
-          {/* Circular HUD Reticle */}
-          <circle cx="185" cy="105" r="18" fill="none" stroke="#00F0FF" strokeWidth="1" strokeDasharray="4 4" />
-        </g>
-
-        {/* Scanning Laser HUD Line Across Visor */}
-        <line
-          x1="102"
-          y1={visorPulse ? '118' : '92'}
-          x2="218"
-          y2={visorPulse ? '118' : '92'}
-          stroke="#00F0FF"
-          strokeWidth="2"
-          filter="url(#cyanGlow)"
-          style={{ transition: 'y1 0.4s ease, y2 0.4s ease' }}
-        />
-
-        {/* ─── CHEST QUANTUM ARC REACTOR CORE ─── */}
-        <circle cx="160" cy="170" r="24" fill="url(#titaniumArmor)" stroke="#00F0FF" strokeWidth="2" />
-        <circle cx="160" cy="170" r="18" fill="url(#arcReactor)" filter="url(#cyanGlow)" />
-        {/* Core Tri-Node Rings */}
-        <circle cx="160" cy="170" r="12" fill="none" stroke="#FFFFFF" strokeWidth="1.5" strokeDasharray="6 4" />
-        <polygon points="160,162 167,175 153,175" fill="#00F0FF" />
-
-        {/* ─── QUANTUM GOLDEN BANANA IN CYBERNETIC CLAW ─── */}
-        {/* Robotic Arm Holding the Quantum Banana */}
-        <path d="M90 170C70 180 60 195 85 210" stroke="#0EA5E9" strokeWidth="8" strokeLinecap="round" />
-        <circle cx="85" cy="210" r="8" fill="url(#titaniumArmor)" stroke="#00F0FF" strokeWidth="1.5" />
-
-        {/* Radiant Quantum Golden Banana (Luminescent) */}
-        <g filter="url(#superGlow)">
-          <path
-            d="M80 195C88 190 102 196 108 206C112 214 110 224 100 230C86 238 72 230 68 220C65 212 70 200 80 195Z"
-            fill="url(#quantumBanana)"
-            stroke="#FFD700"
-            strokeWidth="2"
-          />
-          {/* Banana Stem Tip */}
-          <path d="M108 206L114 209" stroke="#78350F" strokeWidth="3" strokeLinecap="round" />
-        </g>
-
-        {/* Futuristic Tech Decals & Logos on Suit */}
-        <text
-          x="160"
-          y="225"
-          fill="#38BDF8"
-          fontSize="8"
-          fontWeight="900"
-          fontFamily="monospace"
-          textAnchor="middle"
-          letterSpacing="2"
-        >
-          BQ-MK4 // 2026
-        </text>
-      </motion.svg>
+        {/* Subsystem 4: AI Status */}
+        <div style={{
+          background: 'rgba(168, 85, 247, 0.08)',
+          border: '1px solid rgba(168, 85, 247, 0.4)',
+          borderRadius: '8px',
+          padding: '0.45rem 0.65rem',
+          textAlign: 'center',
+          fontFamily: 'var(--font-mono)',
+          boxShadow: '0 0 12px rgba(168, 85, 247, 0.15)'
+        }}>
+          <div style={{ fontSize: '0.62rem', color: '#C084FC', fontWeight: 800, textTransform: 'uppercase' }}>MK-IV AI CORE</div>
+          <div style={{ fontSize: '0.78rem', color: '#FFFFFF', fontWeight: 800, marginTop: '2px' }}>STATUS: ONLINE</div>
+        </div>
+      </div>
     </div>
   );
 }

@@ -301,12 +301,13 @@ export default function App() {
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          gap: '1rem'
+          gap: '1rem',
+          flexWrap: 'wrap'
         }}>
           {/* Logo & Unit Branding */}
           <motion.div
             onClick={() => { setActiveGameMode(null); setActiveTab('welcome'); }}
-            style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer' }}
+            style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer', flexShrink: 0 }}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
@@ -345,7 +346,7 @@ export default function App() {
           </motion.div>
 
           {/* Navigation Links — High-Tech Gaming HUD Tabs */}
-          <nav style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+          <nav style={{ display: 'flex', gap: '0.45rem', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
             {[
               { id: 'welcome', label: 'COMMAND DECK', icon: '⚡' },
               { id: 'modes', label: 'MISSION MODES', icon: '🎮' },
@@ -381,7 +382,8 @@ export default function App() {
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.4rem',
-                    transition: 'all 0.2s ease'
+                    transition: 'all 0.2s ease',
+                    whiteSpace: 'nowrap'
                   }}
                 >
                   <span style={{ fontSize: '0.9rem' }}>{tab.icon}</span>
@@ -410,7 +412,8 @@ export default function App() {
                 alignItems: 'center',
                 gap: '0.45rem',
                 boxShadow: '0 0 12px rgba(0, 240, 255, 0.25)',
-                transition: 'all 0.2s ease'
+                transition: 'all 0.2s ease',
+                whiteSpace: 'nowrap'
               }}
               title="Watch the official 3D animated cinematic intro cutscene"
             >
@@ -420,7 +423,7 @@ export default function App() {
           </nav>
 
           {/* Audio Controls & Virtual Identity (Theme 2 & 4) */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexWrap: 'wrap', justifyContent: 'flex-end', flexShrink: 0 }}>
             {/* Native Web Audio API Mute Toggle */}
             <motion.button
               onClick={handleToggleAudio}
@@ -627,97 +630,163 @@ export default function App() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.5 }}
-                        style={{ display: 'flex', justifyContent: 'center', gap: '1rem', flexWrap: 'wrap' }}
+                        style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '1rem',
+                          alignItems: 'center',
+                          maxWidth: '780px',
+                          margin: '0 auto'
+                        }}
                       >
-                        {/* 1v1 Battle Mode Flagship */}
-                        <motion.button
-                          onClick={() => setIsMultiplayerActive(true)}
-                          className="btn-primary"
-                          whileHover={{ scale: 1.05, boxShadow: '0 0 35px rgba(0, 240, 255, 0.8)' }}
-                          whileTap={{ scale: 0.95 }}
-                          style={{
-                            fontSize: '1rem',
-                            padding: '0.9rem 1.8rem',
-                            background: 'linear-gradient(135deg, #00F0FF 0%, #0284C7 50%, #FFD700 100%)',
-                            color: '#020617',
-                            fontWeight: 900,
-                            fontFamily: 'var(--font-mono)',
-                            letterSpacing: '0.04em',
-                            boxShadow: '0 0 25px rgba(0, 240, 255, 0.5)'
-                          }}
-                        >
-                          ⚔️ 1v1 CYBER DUEL (3/5/7 MIN)
-                        </motion.button>
+                        {/* Primary Flagship Actions (1v1 Duel & Cinema Intro) */}
+                        <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap', width: '100%' }}>
+                          <motion.button
+                            onClick={() => setIsMultiplayerActive(true)}
+                            className="btn-primary"
+                            whileHover={{ scale: 1.04, boxShadow: '0 0 35px rgba(0, 240, 255, 0.8)' }}
+                            whileTap={{ scale: 0.96 }}
+                            style={{
+                              flex: '1 1 260px',
+                              maxWidth: '360px',
+                              fontSize: '1rem',
+                              padding: '0.95rem 1.8rem',
+                              background: 'linear-gradient(135deg, #00F0FF 0%, #0284C7 50%, #FFD700 100%)',
+                              color: '#020617',
+                              fontWeight: 900,
+                              fontFamily: 'var(--font-mono)',
+                              letterSpacing: '0.04em',
+                              boxShadow: '0 0 25px rgba(0, 240, 255, 0.5)'
+                            }}
+                          >
+                            ⚔️ 1v1 CYBER DUEL (3/5/7 MIN)
+                          </motion.button>
 
-                        <motion.button
-                          onClick={() => handleStartGame(GAME_MODES.SPEED_RUSH)}
-                          className="btn-secondary"
-                          whileHover={{ scale: 1.05, borderColor: '#A855F7', boxShadow: '0 0 20px rgba(168, 85, 247, 0.4)' }}
-                          whileTap={{ scale: 0.95 }}
-                          style={{
-                            fontSize: '0.95rem',
-                            padding: '0.9rem 1.6rem',
-                            fontFamily: 'var(--font-mono)',
-                            borderColor: 'rgba(168, 85, 247, 0.5)',
-                            color: '#C084FC',
-                            fontWeight: 700
-                          }}
-                        >
-                          ⚡ SPEED RUSH (60s)
-                        </motion.button>
+                          <motion.button
+                            onClick={() => setShowCinematicModal(true)}
+                            className="btn-secondary"
+                            whileHover={{ scale: 1.04, boxShadow: '0 0 25px rgba(0, 240, 255, 0.6)' }}
+                            whileTap={{ scale: 0.96 }}
+                            style={{
+                              flex: '1 1 220px',
+                              maxWidth: '300px',
+                              fontSize: '0.95rem',
+                              padding: '0.95rem 1.6rem',
+                              fontFamily: 'var(--font-mono)',
+                              borderColor: '#00F0FF',
+                              color: '#00F0FF',
+                              fontWeight: 800,
+                              background: 'rgba(0, 240, 255, 0.12)',
+                              boxShadow: '0 0 15px rgba(0, 240, 255, 0.25)'
+                            }}
+                          >
+                            🎬 WATCH INTRO CUTSCENE
+                          </motion.button>
+                        </div>
 
-                        <motion.button
-                          onClick={() => handleStartGame(GAME_MODES.SURVIVAL)}
-                          className="btn-secondary"
-                          whileHover={{ scale: 1.05, borderColor: '#EF4444', boxShadow: '0 0 20px rgba(239, 68, 68, 0.4)' }}
-                          whileTap={{ scale: 0.95 }}
-                          style={{
-                            fontSize: '0.95rem',
-                            padding: '0.9rem 1.6rem',
-                            fontFamily: 'var(--font-mono)',
-                            borderColor: 'rgba(239, 68, 68, 0.5)',
-                            color: '#F87171',
-                            fontWeight: 700
-                          }}
-                        >
-                          🛡️ SURVIVAL (3 LIVES)
-                        </motion.button>
+                        {/* Arcade Modes Grid (Non-overlapping, equal height & structured) */}
+                        <div style={{
+                          display: 'grid',
+                          gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+                          gap: '0.75rem',
+                          width: '100%'
+                        }}>
+                          <motion.button
+                            onClick={() => handleStartGame(GAME_MODES.SPEED_RUSH)}
+                            whileHover={{ scale: 1.03, borderColor: '#A855F7', boxShadow: '0 0 18px rgba(168, 85, 247, 0.4)' }}
+                            whileTap={{ scale: 0.97 }}
+                            style={{
+                              padding: '0.75rem 0.9rem',
+                              borderRadius: '8px',
+                              border: '1px solid rgba(168, 85, 247, 0.5)',
+                              background: 'rgba(168, 85, 247, 0.08)',
+                              color: '#C084FC',
+                              fontFamily: 'var(--font-mono)',
+                              fontWeight: 800,
+                              fontSize: '0.85rem',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '0.4rem',
+                              transition: 'all 0.2s ease'
+                            }}
+                          >
+                            <span>⚡</span> SPEED RUSH (60s)
+                          </motion.button>
 
-                        <motion.button
-                          onClick={() => handleStartGame(GAME_MODES.STREAK_MASTER)}
-                          className="btn-secondary"
-                          whileHover={{ scale: 1.05, borderColor: '#FFD700', boxShadow: '0 0 20px rgba(255, 215, 0, 0.4)' }}
-                          whileTap={{ scale: 0.95 }}
-                          style={{
-                            fontSize: '0.95rem',
-                            padding: '0.9rem 1.6rem',
-                            fontFamily: 'var(--font-mono)',
-                            borderColor: 'rgba(255, 215, 0, 0.5)',
-                            color: '#FFD700',
-                            fontWeight: 700
-                          }}
-                        >
-                          🎯 PERFECT 10
-                        </motion.button>
+                          <motion.button
+                            onClick={() => handleStartGame(GAME_MODES.SURVIVAL)}
+                            whileHover={{ scale: 1.03, borderColor: '#EF4444', boxShadow: '0 0 18px rgba(239, 68, 68, 0.4)' }}
+                            whileTap={{ scale: 0.97 }}
+                            style={{
+                              padding: '0.75rem 0.9rem',
+                              borderRadius: '8px',
+                              border: '1px solid rgba(239, 68, 68, 0.5)',
+                              background: 'rgba(239, 68, 68, 0.08)',
+                              color: '#F87171',
+                              fontFamily: 'var(--font-mono)',
+                              fontWeight: 800,
+                              fontSize: '0.85rem',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '0.4rem',
+                              transition: 'all 0.2s ease'
+                            }}
+                          >
+                            <span>🛡️</span> SURVIVAL (3 LIVES)
+                          </motion.button>
 
-                        <motion.button
-                          onClick={() => setShowCinematicModal(true)}
-                          className="btn-secondary"
-                          whileHover={{ scale: 1.05, boxShadow: '0 0 25px rgba(0, 240, 255, 0.6)' }}
-                          whileTap={{ scale: 0.95 }}
-                          style={{
-                            fontSize: '0.95rem',
-                            padding: '0.9rem 1.6rem',
-                            fontFamily: 'var(--font-mono)',
-                            borderColor: '#00F0FF',
-                            color: '#00F0FF',
-                            fontWeight: 800,
-                            background: 'rgba(0, 240, 255, 0.12)',
-                            boxShadow: '0 0 15px rgba(0, 240, 255, 0.25)'
-                          }}
-                        >
-                          🎬 PLAY CUTSCENE
-                        </motion.button>
+                          <motion.button
+                            onClick={() => handleStartGame(GAME_MODES.STREAK_MASTER)}
+                            whileHover={{ scale: 1.03, borderColor: '#FFD700', boxShadow: '0 0 18px rgba(255, 215, 0, 0.4)' }}
+                            whileTap={{ scale: 0.97 }}
+                            style={{
+                              padding: '0.75rem 0.9rem',
+                              borderRadius: '8px',
+                              border: '1px solid rgba(255, 215, 0, 0.5)',
+                              background: 'rgba(255, 215, 0, 0.08)',
+                              color: '#FFD700',
+                              fontFamily: 'var(--font-mono)',
+                              fontWeight: 800,
+                              fontSize: '0.85rem',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '0.4rem',
+                              transition: 'all 0.2s ease'
+                            }}
+                          >
+                            <span>🎯</span> PERFECT 10
+                          </motion.button>
+
+                          <motion.button
+                            onClick={() => handleStartGame(GAME_MODES.PRACTICE)}
+                            whileHover={{ scale: 1.03, borderColor: '#10B981', boxShadow: '0 0 18px rgba(16, 185, 129, 0.4)' }}
+                            whileTap={{ scale: 0.97 }}
+                            style={{
+                              padding: '0.75rem 0.9rem',
+                              borderRadius: '8px',
+                              border: '1px solid rgba(16, 185, 129, 0.5)',
+                              background: 'rgba(16, 185, 129, 0.08)',
+                              color: '#34D399',
+                              fontFamily: 'var(--font-mono)',
+                              fontWeight: 800,
+                              fontSize: '0.85rem',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '0.4rem',
+                              transition: 'all 0.2s ease'
+                            }}
+                          >
+                            <span>🧘</span> ZEN PRACTICE
+                          </motion.button>
+                        </div>
                       </motion.div>
                     </div>
 

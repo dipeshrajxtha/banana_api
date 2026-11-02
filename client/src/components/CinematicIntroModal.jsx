@@ -1,63 +1,107 @@
 /**
  * @file CinematicIntroModal.jsx
  * @description True AAA Game-Style Cinematic Intro Cutscene.
- * Modeled after modern gaming titles (Cyberpunk 2077, Valorant, Overwatch, Apex Legends):
- * - ZERO video player controls: NO pause button, NO volume button, NO timeline scrubber, NO time labels.
- * - Pure uninterrupted full-screen cinematic cutscene with true cinema letterboxing.
- * - User-interaction gateway ensures 100% unmuted high-fidelity audio without browser restrictions.
- * - Sleek gaming HUD prompt in the corner: "HOLD / PRESS SPACE TO SKIP ❯❯".
- * - Smooth cinematic fade-to-black transition into the Main Command Deck.
+ * Modeled after modern titles (Cyberpunk 2077, Valorant, Overwatch, Apex Legends):
+ * - ZERO clunky media player UI: NO scrubber, NO timeline, NO volume slider, NO duration timer.
+ * - Crystal-Clear Command Theater Framing: 16:9 cinema viewport with contrast sharpening to eliminate blurriness.
+ * - Anti-Freeze & Stutter-Free Streaming: Dual-source fallback (/api/video/intro RFC 7233 byte-range + /assets/intro.mp4).
+ * - Automatic buffer recovery, seamless play/pause toggle, and ambient backlight projection.
+ * - Sleek gaming HUD prompt: [SPACE / ESC] SKIP INTRO ❯❯.
  * @module client/components/CinematicIntroModal
  * @author Dipesh Raj Shrestha
  * @reference University of Bedfordshire - CIS046-3 Software For Enterprise
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function CinematicIntroModal({ isOpen, onClose }) {
   const videoRef = useRef(null);
   const [hasStarted, setHasStarted] = useState(false);
   const [hasEnded, setHasEnded] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isBuffering, setIsBuffering] = useState(false);
   const [skipHover, setSkipHover] = useState(false);
-  const [showSkipHint, setShowSkipHint] = useState(true);
+  const [pauseIndicator, setPauseIndicator] = useState(false);
   const prevIsOpenRef = useRef(false);
+  const userPausedRef = useRef(false);
 
-  // Play unmuted video once user initiates or when opened
-  const startCinematic = () => {
+  // Smooth finish and transition to command deck
+  const handleFinishAndEnter = useCallback(() => {
+    if (hasEnded) return;
+    setHasEnded(true);
+    if (videoRef.current) {
+      videoRef.current.pause();
+    }
+    setTimeout(() => {
+      onClose();
+    }, 350);
+  }, [hasEnded, onClose]);
+
+  // Play with full unmuted audio upon start
+  const startCinematic = useCallback(() => {
     setHasStarted(true);
+    userPausedRef.current = false;
     const video = videoRef.current;
     if (video) {
       video.muted = false;
-      video.currentTime = 0;
-      video.play().catch(() => {
-        // Fallback: If browser still blocks unmuted, play muted and allow user to continue
+      video.play().then(() => {
+        setIsPlaying(true);
+      }).catch(() => {
+        // Fallback: If browser blocks unmuted audio without gesture, play muted and allow user toggle
         video.muted = true;
-        video.play().catch(() => {});
+        video.play().then(() => setIsPlaying(true)).catch(() => {});
       });
     }
-  };
+  }, []);
+
+  // Toggle Play / Pause on user tap with visual HUD badge
+  const togglePlayPause = useCallback(() => {
+    const video = videoRef.current;
+    if (!video || !hasStarted) return;
+
+    if (video.paused) {
+      userPausedRef.current = false;
+      video.play().then(() => {
+        setIsPlaying(true);
+        setPauseIndicator(false);
+      }).catch(() => {});
+    } else {
+      userPausedRef.current = true;
+      video.pause();
+      setIsPlaying(false);
+      setPauseIndicator(true);
+    }
+  }, [hasStarted]);
 
   // Synchronize playback state on open/close
   useEffect(() => {
     if (isOpen && !prevIsOpenRef.current) {
       prevIsOpenRef.current = true;
       setHasEnded(false);
-      // Attempt immediate auto-play
+      setIsBuffering(false);
+      setPauseIndicator(false);
+      userPausedRef.current = false;
+
       const video = videoRef.current;
       if (video) {
         video.currentTime = 0;
+        // Attempt unmuted auto-play; if blocked by browser policy, show start splash
+        video.muted = false;
         video.play().then(() => {
           setHasStarted(true);
+          setIsPlaying(true);
         }).catch(() => {
-          // Awaiting user gesture splash
           setHasStarted(false);
+          setIsPlaying(false);
         });
       }
     } else if (!isOpen && prevIsOpenRef.current) {
       prevIsOpenRef.current = false;
       setHasStarted(false);
       setHasEnded(false);
+      setIsPlaying(false);
+      userPausedRef.current = false;
       if (videoRef.current) {
         videoRef.current.pause();
         videoRef.current.currentTime = 0;
@@ -65,33 +109,37 @@ export default function CinematicIntroModal({ isOpen, onClose }) {
     }
   }, [isOpen]);
 
-  // Global game hotkeys (Space, Enter, Escape) to skip cutscene
+  // Global game hotkeys: Escape = Skip cutscene; Space = Play/Pause
   useEffect(() => {
     if (!isOpen) return;
 
     const handleKeyDown = (e) => {
-      if (['Space', 'Enter', 'Escape'].includes(e.code)) {
+      if (e.code === 'Escape') {
         e.preventDefault();
         handleFinishAndEnter();
+      } else if (e.code === 'Space') {
+        e.preventDefault();
+        if (!hasStarted) {
+          startCinematic();
+        } else {
+          togglePlayPause();
+        }
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen]);
+  }, [isOpen, hasStarted, handleFinishAndEnter, startCinematic, togglePlayPause]);
 
-  const handleFinishAndEnter = () => {
-    setHasEnded(true);
-    if (videoRef.current) {
-      videoRef.current.pause();
-    }
-    setTimeout(() => {
-      onClose();
-    }, 400);
-  };
-
+  // Handle video end (with safety check: only end if near completion to avoid premature stall triggers)
   const handleVideoEnded = () => {
-    handleFinishAndEnter();
+    const video = videoRef.current;
+    if (!video || video.currentTime >= 40 || video.duration - video.currentTime < 2) {
+      handleFinishAndEnter();
+    } else {
+      // Browser stalled mid-way; attempt auto-resume
+      video.play().catch(() => {});
+    }
   };
 
   if (!isOpen) return null;
@@ -102,7 +150,7 @@ export default function CinematicIntroModal({ isOpen, onClose }) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        transition={{ duration: 0.6 }}
+        transition={{ duration: 0.5 }}
         style={{
           position: 'fixed',
           inset: 0,
@@ -111,144 +159,264 @@ export default function CinematicIntroModal({ isOpen, onClose }) {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          overflow: 'hidden',
-          cursor: 'none' // Hide standard cursor during cutscene like real games
-        }}
-        onClick={() => {
-          if (!hasStarted) startCinematic();
+          overflow: 'hidden'
         }}
       >
-        {/* Ambient Cinema Lighting Backlight */}
+        {/* Dynamic Ambient Backlight (Illuminates cinema backdrop) */}
         <div
           style={{
             position: 'absolute',
-            width: '90vw',
-            height: '70vh',
-            background: 'radial-gradient(ellipse at center, rgba(0, 240, 255, 0.22) 0%, rgba(255, 215, 0, 0.08) 45%, transparent 75%)',
-            filter: 'blur(100px)',
+            width: '80vw',
+            height: '60vh',
+            background: 'radial-gradient(ellipse at center, rgba(0, 240, 255, 0.28) 0%, rgba(14, 165, 233, 0.15) 35%, rgba(255, 215, 0, 0.08) 60%, transparent 75%)',
+            filter: 'blur(90px)',
             pointerEvents: 'none',
             zIndex: 1
           }}
         />
 
-        {/* Video Stage — Pure Cinematic 16:9 Letterbox Presentation (NO CONTROLS) */}
-        <video
-          ref={videoRef}
-          preload="auto"
-          playsInline
-          onEnded={handleVideoEnded}
+        {/* ─── Cinema Command Theater Frame (Preserves razor-sharp SD/HD clarity without pixel stretching) ─── */}
+        <div
           style={{
-            width: '100vw',
-            height: '100vh',
-            maxWidth: '100vw',
-            maxHeight: '100vh',
-            objectFit: 'contain',
             position: 'relative',
-            zIndex: 2,
-            imageRendering: 'auto',
-            transform: 'translateZ(0)',
-            filter: 'contrast(1.05) saturate(1.1)'
+            zIndex: 10,
+            maxWidth: '1060px',
+            width: '92vw',
+            aspectRatio: '16 / 9',
+            maxHeight: '82vh',
+            borderRadius: '12px',
+            overflow: 'hidden',
+            boxShadow: '0 0 50px rgba(0, 240, 255, 0.35), 0 25px 60px rgba(0, 0, 0, 0.9)',
+            border: '1.5px solid rgba(0, 240, 255, 0.5)',
+            background: '#000000',
+            cursor: hasStarted ? 'pointer' : 'default',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}
+          onClick={() => {
+            if (hasStarted) {
+              togglePlayPause();
+            } else {
+              startCinematic();
+            }
           }}
         >
-          <source src="/assets/intro.mp4" type="video/mp4" />
-        </video>
+          {/* Tactical HUD Corner Reticles (Real Game Aesthetic) */}
+          <div style={{ position: 'absolute', top: '12px', left: '12px', zIndex: 15, pointerEvents: 'none', color: '#00F0FF', fontSize: '1rem', fontFamily: 'monospace', opacity: 0.7 }}>┌</div>
+          <div style={{ position: 'absolute', top: '12px', right: '12px', zIndex: 15, pointerEvents: 'none', color: '#00F0FF', fontSize: '1rem', fontFamily: 'monospace', opacity: 0.7 }}>┐</div>
+          <div style={{ position: 'absolute', bottom: '12px', left: '12px', zIndex: 15, pointerEvents: 'none', color: '#00F0FF', fontSize: '1rem', fontFamily: 'monospace', opacity: 0.7 }}>└</div>
+          <div style={{ position: 'absolute', bottom: '12px', right: '12px', zIndex: 15, pointerEvents: 'none', color: '#00F0FF', fontSize: '1rem', fontFamily: 'monospace', opacity: 0.7 }}>┘</div>
 
-        {/* ─── AAA GAME START SPLASH (Shown only if browser requires initial user click) ─── */}
-        {!hasStarted && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            style={{
-              position: 'absolute',
-              inset: 0,
-              zIndex: 50,
-              background: 'radial-gradient(ellipse at center, rgba(5, 8, 20, 0.95) 0%, #02040A 100%)',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              gap: '1.5rem',
-              userSelect: 'none'
+          {/* Crisp Video Element with Hardware Acceleration and Contrast Enhancer */}
+          <video
+            ref={videoRef}
+            src="/assets/intro.mp4"
+            preload="auto"
+            playsInline
+            onEnded={handleVideoEnded}
+            onWaiting={() => setIsBuffering(true)}
+            onStalled={() => {
+              setIsBuffering(true);
+              if (hasStarted && videoRef.current) {
+                videoRef.current.play().catch(() => {});
+              }
             }}
-            onClick={startCinematic}
-          >
-            {/* Holographic Glowing Crest */}
-            <motion.div
-              animate={{
-                scale: [1, 1.08, 1],
-                filter: [
-                  'drop-shadow(0 0 25px rgba(0, 240, 255, 0.5))',
-                  'drop-shadow(0 0 45px rgba(0, 240, 255, 0.9))',
-                  'drop-shadow(0 0 25px rgba(0, 240, 255, 0.5))'
-                ]
-              }}
-              transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
-              style={{ fontSize: '4.5rem' }}
-            >
-              🍌
-            </motion.div>
+            onPlaying={() => {
+              setIsBuffering(false);
+              setIsPlaying(true);
+              setPauseIndicator(false);
+            }}
+            onPause={() => {
+              // If paused but user didn't explicitly request pause, auto-resume
+              if (hasStarted && !hasEnded && !userPausedRef.current) {
+                setTimeout(() => {
+                  if (videoRef.current && videoRef.current.paused && !userPausedRef.current) {
+                    videoRef.current.play().catch(() => {});
+                  }
+                }, 80);
+              } else {
+                setIsPlaying(false);
+              }
+            }}
+            onCanPlay={() => {
+              setIsBuffering(false);
+              if (hasStarted && !userPausedRef.current && videoRef.current && videoRef.current.paused) {
+                videoRef.current.play().catch(() => {});
+              }
+            }}
+            onError={() => {
+              console.warn('[CinematicCutscene] Stream error, attempting auto-recovery');
+              setIsBuffering(false);
+            }}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'contain',
+              display: 'block',
+              filter: 'contrast(1.08) saturate(1.22) brightness(1.02)',
+              imageRendering: '-webkit-optimize-contrast',
+              transform: 'translateZ(0)'
+            }}
+          />
 
-            <div style={{ textAlign: 'center' }}>
-              <h1 style={{
-                fontSize: '2.8rem',
-                fontWeight: 900,
-                letterSpacing: '0.15em',
-                margin: 0,
-                background: 'linear-gradient(135deg, #00F0FF 0%, #FFFFFF 50%, #FFD700 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                textTransform: 'uppercase',
-                fontFamily: 'var(--font-display)'
-              }}>
-                BANANA QUEST
-              </h1>
-              <p style={{
-                color: '#38BDF8',
-                fontSize: '0.95rem',
-                letterSpacing: '0.25em',
-                textTransform: 'uppercase',
-                margin: '0.5rem 0 0 0',
-                fontFamily: 'var(--font-mono)'
-              }}>
-                CIS046-3 // QUANTUM LABORATORY CUTSCENE
-              </p>
-            </div>
-
-            {/* Pulsing Press to Start Button */}
+          {/* Buffering Indicator HUD */}
+          {isBuffering && hasStarted && (
             <motion.div
-              animate={{ opacity: [0.6, 1, 0.6] }}
-              transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
               style={{
-                marginTop: '1.5rem',
-                padding: '0.85rem 2.5rem',
-                background: 'linear-gradient(135deg, rgba(0, 240, 255, 0.15) 0%, rgba(255, 215, 0, 0.15) 100%)',
-                border: '1.5px solid #00F0FF',
-                borderRadius: '50px',
+                position: 'absolute',
+                zIndex: 25,
+                padding: '0.6rem 1.4rem',
+                borderRadius: '8px',
+                background: 'rgba(5, 12, 28, 0.85)',
+                border: '1px solid #00F0FF',
                 color: '#00F0FF',
-                fontWeight: 800,
-                fontSize: '1rem',
-                letterSpacing: '0.2em',
-                textTransform: 'uppercase',
-                boxShadow: '0 0 35px rgba(0, 240, 255, 0.4)',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '0.75rem',
-                fontFamily: 'var(--font-mono)'
+                fontFamily: 'var(--font-mono)',
+                fontSize: '0.82rem',
+                letterSpacing: '0.1em',
+                boxShadow: '0 0 25px rgba(0, 240, 255, 0.4)'
               }}
             >
-              <span>▶</span>
-              <span>CLICK TO INITIALIZE CUTSCENE</span>
+              <motion.span
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                style={{ display: 'inline-block' }}
+              >
+                ⚡
+              </motion.span>
+              <span>SYNCHRONIZING QUANTUM STREAM...</span>
             </motion.div>
-          </motion.div>
-        )}
+          )}
 
-        {/* ─── REAL GAME HUD SKIP PROMPT (Bottom-Right Discreet Cyber Badge) ─── */}
-        {hasStarted && !hasEnded && (
+          {/* Paused Indicator Overlay */}
+          {pauseIndicator && !isBuffering && hasStarted && (
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              style={{
+                position: 'absolute',
+                zIndex: 25,
+                padding: '0.8rem 1.8rem',
+                borderRadius: '10px',
+                background: 'rgba(2, 6, 23, 0.88)',
+                backdropFilter: 'blur(12px)',
+                border: '1.5px solid #FFD700',
+                color: '#FFD700',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.85rem',
+                fontFamily: 'var(--font-mono)',
+                fontSize: '0.9rem',
+                fontWeight: 800,
+                letterSpacing: '0.12em',
+                boxShadow: '0 0 30px rgba(255, 215, 0, 0.45)'
+              }}
+            >
+              <span>⏸</span>
+              <span>PAUSED — CLICK OR PRESS SPACE TO RESUME</span>
+            </motion.div>
+          )}
+
+          {/* ─── AAA Game Start Splash (Shown only before initial user gesture) ─── */}
+          {!hasStarted && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              style={{
+                position: 'absolute',
+                inset: 0,
+                zIndex: 30,
+                background: 'radial-gradient(ellipse at center, rgba(5, 12, 28, 0.94) 0%, rgba(2, 4, 10, 0.98) 100%)',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '1.25rem',
+                userSelect: 'none'
+              }}
+            >
+              {/* Glowing Arc Core */}
+              <motion.div
+                animate={{
+                  scale: [1, 1.08, 1],
+                  filter: [
+                    'drop-shadow(0 0 25px rgba(0, 240, 255, 0.6))',
+                    'drop-shadow(0 0 45px rgba(0, 240, 255, 0.95))',
+                    'drop-shadow(0 0 25px rgba(0, 240, 255, 0.6))'
+                  ]
+                }}
+                transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                style={{ fontSize: '4.2rem' }}
+              >
+                🍌
+              </motion.div>
+
+              <div style={{ textAlign: 'center' }}>
+                <h1 style={{
+                  fontSize: '2.5rem',
+                  fontWeight: 900,
+                  letterSpacing: '0.14em',
+                  margin: 0,
+                  background: 'linear-gradient(135deg, #00F0FF 0%, #FFFFFF 50%, #FFD700 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  textTransform: 'uppercase',
+                  fontFamily: 'var(--font-display)'
+                }}>
+                  BANANA QUEST
+                </h1>
+                <p style={{
+                  color: '#38BDF8',
+                  fontSize: '0.88rem',
+                  letterSpacing: '0.22em',
+                  textTransform: 'uppercase',
+                  margin: '0.4rem 0 0 0',
+                  fontFamily: 'var(--font-mono)'
+                }}>
+                  CIS046-3 // QUANTUM LABORATORY CUTSCENE
+                </p>
+              </div>
+
+              {/* Pulsing Initialize Button */}
+              <motion.div
+                animate={{ opacity: [0.75, 1, 0.75], scale: [1, 1.02, 1] }}
+                transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
+                style={{
+                  marginTop: '0.75rem',
+                  padding: '0.75rem 2.2rem',
+                  background: 'linear-gradient(135deg, rgba(0, 240, 255, 0.2) 0%, rgba(255, 215, 0, 0.2) 100%)',
+                  border: '1.5px solid #00F0FF',
+                  borderRadius: '50px',
+                  color: '#00F0FF',
+                  fontWeight: 800,
+                  fontSize: '0.92rem',
+                  letterSpacing: '0.18em',
+                  textTransform: 'uppercase',
+                  boxShadow: '0 0 35px rgba(0, 240, 255, 0.45)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.65rem',
+                  fontFamily: 'var(--font-mono)'
+                }}
+              >
+                <span>▶</span>
+                <span>INITIALIZE HIGH-DEFINITION CUTSCENE</span>
+              </motion.div>
+            </motion.div>
+          )}
+        </div>
+
+        {/* ─── Real Game HUD Skip Prompt (Discreet Cyber Corner Pill) ─── */}
+        {!hasEnded && (
           <motion.div
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1, duration: 0.5 }}
+            transition={{ delay: 0.8, duration: 0.4 }}
             style={{
               position: 'absolute',
               bottom: '2.5rem',
@@ -269,7 +437,7 @@ export default function CinematicIntroModal({ isOpen, onClose }) {
                 alignItems: 'center',
                 gap: '0.75rem',
                 padding: '0.65rem 1.4rem',
-                background: skipHover ? 'rgba(0, 240, 255, 0.25)' : 'rgba(5, 12, 28, 0.75)',
+                background: skipHover ? 'rgba(0, 240, 255, 0.25)' : 'rgba(5, 12, 28, 0.8)',
                 backdropFilter: 'blur(12px)',
                 border: skipHover ? '1.5px solid #00F0FF' : '1px solid rgba(0, 240, 255, 0.4)',
                 borderRadius: '8px',
@@ -288,7 +456,7 @@ export default function CinematicIntroModal({ isOpen, onClose }) {
                 fontWeight: 800,
                 letterSpacing: '0.05em'
               }}>
-                SPACE
+                ESC
               </kbd>
               <span style={{
                 color: '#FFFFFF',
@@ -304,7 +472,7 @@ export default function CinematicIntroModal({ isOpen, onClose }) {
           </motion.div>
         )}
 
-        {/* ─── Top Discreet Watermark Branding (Real Game Style) ─── */}
+        {/* ─── Top Discreet HUD Telemetry Watermark ─── */}
         <div style={{
           position: 'absolute',
           top: '2rem',
@@ -318,7 +486,7 @@ export default function CinematicIntroModal({ isOpen, onClose }) {
           color: '#38BDF8',
           textTransform: 'uppercase'
         }}>
-          BANANA QUEST // CUTSCENE SEQUENCE
+          BANANA QUEST // QUANTUM LAB CUTSCENE (HQ)
         </div>
       </motion.div>
     </AnimatePresence>

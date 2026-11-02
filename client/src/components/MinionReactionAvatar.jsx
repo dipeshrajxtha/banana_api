@@ -70,10 +70,10 @@ export default function MinionReactionAvatar({ reaction = 'idle', feedbackText =
         xmlns="http://www.w3.org/2000/svg"
         animate={
           reaction === 'correct' ? { y: [0, -6, 0], scale: [1, 1.08, 1] } :
-          reaction === 'wrong' ? { x: [-3, 3, -3, 3, 0] } :
-          reaction === 'urgent' ? { scale: [1, 1.15, 1], rotate: [-4, 4, -4, 4, 0] } :
-          reaction === 'streak' ? { rotate: [0, -8, 8, 0], scale: [1, 1.1, 1] } :
-          { y: [0, -1.5, 0] }
+            reaction === 'wrong' ? { x: [-3, 3, -3, 3, 0] } :
+              reaction === 'urgent' ? { scale: [1, 1.15, 1], rotate: [-4, 4, -4, 4, 0] } :
+                reaction === 'streak' ? { rotate: [0, -8, 8, 0], scale: [1, 1.1, 1] } :
+                  { y: [0, -1.5, 0] }
         }
         transition={{ duration: 0.5 }}
       >

@@ -27,7 +27,7 @@ export const config = {
   // Authentication & Security (Theme 4)
   auth: {
     jwtSecret: process.env.JWT_SECRET || 'dev_banana_quest_jwt_secret_key_change_in_production_2026',
-    jwtExpiresIn: process.env.JWT_EXPIRES_IN || '7d',
+    jwtExpiresIn: process.env.JWT_EXPIRES_IN || '2h',
     cookieName: process.env.COOKIE_NAME || 'banana_quest_session',
     googleClientId: process.env.GOOGLE_CLIENT_ID || ''
   },

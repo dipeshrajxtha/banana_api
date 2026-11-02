@@ -40,17 +40,17 @@ export default function MatchIntro({ gameMode, onComplete }) {
   };
 
   useEffect(() => {
-    // Quick, punchy arcade countdown sequence (~1.9s total)
+    // Tournament-grade rhythmic arcade countdown sequence (~4.3s total, skippable anytime)
     const timers = [];
 
-    timers.push(setTimeout(() => setStep(0), 500));
-    timers.push(setTimeout(() => setStep(1), 900));
-    timers.push(setTimeout(() => setStep(2), 1300));
-    timers.push(setTimeout(() => setStep(3), 1700));
+    timers.push(setTimeout(() => setStep(0), 800));   // 3
+    timers.push(setTimeout(() => setStep(1), 1700));  // 2
+    timers.push(setTimeout(() => setStep(2), 2600));  // 1
+    timers.push(setTimeout(() => setStep(3), 3500));  // SOLVE!
     timers.push(setTimeout(() => {
       setFinished(true);
       if (onComplete) onComplete();
-    }, 2100));
+    }, 4300));
 
     // Global skip hotkey (Space, Enter, Escape)
     const handleKey = (e) => {

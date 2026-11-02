@@ -237,10 +237,10 @@ export default function GameOverModal({ stats, currentUser, onPlayAgain, onRetur
             }}
           >
             {grade.id === 'S' ? '⚡ “QUANTUM SYNTHESIS OVERCLOCK: 100% MAXIMUM POTASSIUM!” 🚀' :
-             grade.id === 'A' ? '⭐ “NEURAL COPROCESSOR SYNCHRONIZED: SENIOR AI SCIENTIST!”' :
-             grade.id === 'B' ? '🔬 “CYBER CORE STABLE: ACCREDITED QUANTUM ENGINEER!”' :
-             grade.id === 'C' ? '⚙️ “DIAGNOSTICS COMPLETE: PROMISING DATA TRAJECTORY!”' :
-             '🔋 “REACTOR RECHARGE REQUIRED: RE-ENGAGE SIMULATION!”'}
+              grade.id === 'A' ? '⭐ “NEURAL COPROCESSOR SYNCHRONIZED: SENIOR AI SCIENTIST!”' :
+                grade.id === 'B' ? '🔬 “CYBER CORE STABLE: ACCREDITED QUANTUM ENGINEER!”' :
+                  grade.id === 'C' ? '⚙️ “DIAGNOSTICS COMPLETE: PROMISING DATA TRAJECTORY!”' :
+                    '🔋 “REACTOR RECHARGE REQUIRED: RE-ENGAGE SIMULATION!”'}
           </motion.div>
 
           {/* Leaderboard High Score Banner */}

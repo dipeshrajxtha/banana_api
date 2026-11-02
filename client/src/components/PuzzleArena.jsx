@@ -25,12 +25,24 @@ export default function PuzzleArena({ gameMode = GAME_MODES.SPEED_RUSH, onGameOv
   // Game State
   const [currentPuzzle, setCurrentPuzzle] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedDigit, setSelectedDigit] = useState(null);
   const [score, setScore] = useState(0);
   const [streak, setStreak] = useState(0);
   const [maxStreak, setMaxStreak] = useState(0);
   const [solvedCount, setSolvedCount] = useState(0);
   const [attemptedCount, setAttemptedCount] = useState(0);
+
+  // Anti-glitch and cooldown synchronization refs
+  const isSubmittingRef = useRef(false);
+  const selectedDigitRef = useRef(null);
+  selectedDigitRef.current = selectedDigit;
+  const currentPuzzleRef = useRef(null);
+  currentPuzzleRef.current = currentPuzzle;
+  const loadingRef = useRef(true);
+  loadingRef.current = loading;
+  const onQuitRef = useRef(onQuit);
+  onQuitRef.current = onQuit;
 
   // Animation state
   const [shaking, setShaking] = useState(false);
@@ -147,6 +159,8 @@ export default function PuzzleArena({ gameMode = GAME_MODES.SPEED_RUSH, onGameOv
       eventBus.emit(GAME_EVENTS.PUZZLE_ERROR, { error: err.message });
     } finally {
       setLoading(false);
+      setIsSubmitting(false);
+      isSubmittingRef.current = false;
     }
   }, []);
 
@@ -176,21 +190,25 @@ export default function PuzzleArena({ gameMode = GAME_MODES.SPEED_RUSH, onGameOv
     setTimeout(() => setShaking(false), 500);
   }, []);
 
-  // Submit answer verification
+  // Submit answer verification with anti-glitch cooldown protection
   const handleSubmitAnswer = useCallback(async () => {
-    if (selectedDigit === null || !currentPuzzle || loading) return;
+    const digit = selectedDigitRef.current;
+    const puzzle = currentPuzzleRef.current;
+    if (digit === null || !puzzle || loadingRef.current || isSubmittingRef.current) return;
+
+    isSubmittingRef.current = true;
+    setIsSubmitting(true);
 
     const responseTimeMs = Date.now() - puzzleStartTimeRef.current;
     solveTimesRef.current.push(responseTimeMs);
 
     try {
-      setLoading(true);
       const res = await fetch('/api/banana/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          puzzleId: currentPuzzle.puzzleId,
-          answer: selectedDigit,
+          puzzleId: puzzle.puzzleId,
+          answer: digit,
           responseTimeMs,
           currentStreak: streakRef.current
         })
@@ -252,7 +270,7 @@ export default function PuzzleArena({ gameMode = GAME_MODES.SPEED_RUSH, onGameOv
             particleCount: 120,
             spread: 90,
             origin: { y: 0.5 },
-            colors: ['#F59E0B', '#FBBF24', '#FCD34D', '#10B981', '#8B5CF6', '#06B6D4']
+            colors: ['#00F0FF', '#38BDF8', '#FFD700', '#F59E0B', '#10B981']
           });
         } else {
           fireConfetti();
@@ -262,21 +280,21 @@ export default function PuzzleArena({ gameMode = GAME_MODES.SPEED_RUSH, onGameOv
         if (isStreakMaster && nextSolved >= 10) {
           setTimeout(() => {
             if (finishGameRef.current) finishGameRef.current();
-          }, 850);
+          }, 950);
           return;
         }
 
         if (isTimeAttack && nextSolved >= 10) {
           setTimeout(() => {
             if (finishGameRef.current) finishGameRef.current();
-          }, 850);
+          }, 950);
           return;
         }
 
-        // Auto transition to next puzzle after positive feedback
+        // Smooth 950ms feedback window before loading next puzzle
         setTimeout(() => {
           fetchNextPuzzle();
-        }, 850);
+        }, 950);
       } else {
         streakRef.current = 0;
         setStreak(0);
@@ -303,7 +321,7 @@ export default function PuzzleArena({ gameMode = GAME_MODES.SPEED_RUSH, onGameOv
           if (nextLives <= 0) {
             setTimeout(() => {
               if (finishGameRef.current) finishGameRef.current();
-            }, 1000);
+            }, 1100);
             return;
           }
         }
@@ -314,21 +332,18 @@ export default function PuzzleArena({ gameMode = GAME_MODES.SPEED_RUSH, onGameOv
       }
     } catch (err) {
       console.error('[PuzzleArena] Verification error:', err);
-      setLoading(false);
+      setIsSubmitting(false);
+      isSubmittingRef.current = false;
     }
-  }, [selectedDigit, currentPuzzle, loading, isStreakMaster, isTimeAttack, isSurvival, fetchNextPuzzle, fireConfetti, triggerShake]);
+  }, [isStreakMaster, isTimeAttack, isSurvival, fetchNextPuzzle, fireConfetti, triggerShake]);
 
-  // Reactive DOM Keyboard Listener (Theme 2: Event-Driven Programming)
+  // Stable Reactive DOM Keyboard Listener (Theme 2: Event-Driven Programming)
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (loading) return;
+      if (loadingRef.current || isSubmittingRef.current) return;
 
       // Handle Digits 0-9 (Physical number keys and Numpad)
-      if (/^[0-9]$/.test(e.key)) {
-        const digit = parseInt(e.key, 10);
-        setSelectedDigit(digit);
-        eventBus.emit(GAME_EVENTS.INPUT_DIGIT, { digit });
-      } else if (e.code.startsWith('Numpad') && /^[0-9]$/.test(e.key)) {
+      if (/^[0-9]$/.test(e.key) || (e.code.startsWith('Numpad') && /^[0-9]$/.test(e.key))) {
         const digit = parseInt(e.key, 10);
         setSelectedDigit(digit);
         eventBus.emit(GAME_EVENTS.INPUT_DIGIT, { digit });
@@ -338,14 +353,14 @@ export default function PuzzleArena({ gameMode = GAME_MODES.SPEED_RUSH, onGameOv
       } else if (e.key === 'Enter') {
         e.preventDefault();
         handleSubmitAnswer();
-      } else if (e.key === 'Escape' && onQuit) {
-        onQuit();
+      } else if (e.key === 'Escape' && onQuitRef.current) {
+        onQuitRef.current();
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [loading, handleSubmitAnswer, onQuit]);
+  }, [handleSubmitAnswer]);
 
   // Mode Display Name Helper
   const getModeLabel = () => {
@@ -591,7 +606,7 @@ export default function PuzzleArena({ gameMode = GAME_MODES.SPEED_RUSH, onGameOv
       {/* ═══════ MAIN PUZZLE DISPLAY ARENA ═══════ */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'minmax(320px, 1fr) 300px',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(290px, 1fr))',
         gap: '2rem',
         alignItems: 'center'
       }}>
@@ -719,7 +734,7 @@ export default function PuzzleArena({ gameMode = GAME_MODES.SPEED_RUSH, onGameOv
             onDigitPress={(d) => setSelectedDigit(d)}
             onClear={() => setSelectedDigit(null)}
             onSubmit={handleSubmitAnswer}
-            disabled={loading}
+            disabled={loading || isSubmitting}
             activeDigit={selectedDigit}
           />
         </motion.div>
