@@ -60,6 +60,7 @@ export default function PuzzleArena({ gameMode = GAME_MODES.SPEED_RUSH, onGameOv
   // High-precision response time tracker
   const puzzleStartTimeRef = useRef(Date.now());
   const solveTimesRef = useRef([]);
+  const timerStartedRef = useRef(false);
 
   // Synchronization refs to prevent stale closures and TDZ initialization errors
   const scoreRef = useRef(0);
@@ -150,6 +151,12 @@ export default function PuzzleArena({ gameMode = GAME_MODES.SPEED_RUSH, onGameOv
       setCurrentPuzzle(data.puzzle);
       puzzleStartTimeRef.current = Date.now();
 
+      // Start gameplay countdown only once the first puzzle is loaded and visible
+      if (hasTimer && !timerStartedRef.current) {
+        timerStartedRef.current = true;
+        timer.start(durationMs);
+      }
+
       eventBus.emit(GAME_EVENTS.PUZZLE_LOADED, {
         puzzleId: data.puzzle.puzzleId,
         isFallback: data.puzzle.isFallback
@@ -162,17 +169,16 @@ export default function PuzzleArena({ gameMode = GAME_MODES.SPEED_RUSH, onGameOv
       setIsSubmitting(false);
       isSubmittingRef.current = false;
     }
-  }, []);
+  }, [hasTimer, timer, durationMs]);
 
   // Start round on component mount and clean up on unmount
   useEffect(() => {
     eventBus.emit(GAME_EVENTS.GAME_STARTED, { gameMode });
+    timerStartedRef.current = false;
     fetchNextPuzzle();
-    if (hasTimer) {
-      timer.start(durationMs);
-    }
     return () => {
       timer.stop();
+      timerStartedRef.current = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

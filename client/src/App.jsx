@@ -188,8 +188,8 @@ export default function App() {
       return;
     }
     setGameOverStats(null);
-    setShowIntro(false);
-    setActiveGameMode(mode); // Immediate launch without 1-second countdown delay
+    setIntroMode(mode);
+    setShowIntro(true); // Smooth 3... 2... 1... GO countdown before every mode
   };
 
   const handleIntroComplete = () => {

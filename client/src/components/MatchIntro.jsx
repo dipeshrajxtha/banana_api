@@ -1,7 +1,7 @@
 /**
  * @file MatchIntro.jsx
- * @description Full-screen arcade countdown overlay ("Ready... Set... SOLVE!") with Framer Motion animations.
- * Plays before the puzzle unlocks, building tension with scale, opacity, and color transitions.
+ * @description Full-screen arcade countdown sequence ("3... 2... 1... SOLVE!") with rhythmic audio beeps.
+ * Calibrated to exactly 1 second per count so the start timing feels authentic, crisp, and predictable.
  * @module client/components/MatchIntro
  * @author Dipesh Raj Shrestha
  * @reference University of Bedfordshire - CIS046-3 Software For Enterprise (Theme 2: Event-Driven Programming)
@@ -10,27 +10,28 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GAME_MODES } from '@banana-quest/shared';
+import { soundService } from '../services/soundService.js';
 
 const COUNTDOWN_STEPS = [
-  { label: '3', color: 'var(--accent-cyan)', subtitle: 'Get Ready...' },
-  { label: '2', color: 'var(--accent-purple)', subtitle: 'Set...' },
-  { label: '1', color: 'var(--accent-gold)', subtitle: 'Almost...' },
-  { label: 'SOLVE!', color: 'var(--accent-emerald)', subtitle: '🍌 Go Go Go!' }
+  { label: '3', color: '#00F0FF', subtitle: 'GET READY...' },
+  { label: '2', color: '#A855F7', subtitle: 'SET...' },
+  { label: '1', color: '#FFD700', subtitle: 'ALMOST...' },
+  { label: 'SOLVE!', color: '#10B981', subtitle: '⚡ GO GO GO!' }
 ];
 
 const getModeIntro = (mode) => {
   switch (mode) {
-    case GAME_MODES.SPEED_RUSH: return { icon: '⚡', name: 'SPEED RUSH', sub: '60-Second Blitz' };
+    case GAME_MODES.SPEED_RUSH: return { icon: '⚡', name: 'SPEED RUSH', sub: '60-Second Blitz Sprint' };
     case GAME_MODES.SURVIVAL: return { icon: '🛡️', name: 'SURVIVAL', sub: '3 Lives • Think Carefully' };
-    case GAME_MODES.STREAK_MASTER: return { icon: '🎯', name: 'PERFECT 10', sub: 'Zero Mistakes Allowed' };
-    case GAME_MODES.TIME_ATTACK: return { icon: '⏱️', name: 'TIME ATTACK', sub: 'Race to Solve 10' };
-    case GAME_MODES.PRACTICE: return { icon: '🧘', name: 'ZEN PRACTICE', sub: 'Relax & Train' };
-    default: return { icon: '🍌', name: mode, sub: '' };
+    case GAME_MODES.STREAK_MASTER: return { icon: '🎯', name: 'PERFECT 10', sub: 'Flawless 10-Streak Target' };
+    case GAME_MODES.TIME_ATTACK: return { icon: '⏱️', name: 'TIME ATTACK', sub: '10 Equations Speed Trial' };
+    case GAME_MODES.PRACTICE: return { icon: '🧘', name: 'ZEN PRACTICE', sub: 'Relaxed Training' };
+    default: return { icon: '🍌', name: mode || 'BANANA QUEST', sub: 'Math Simulation' };
   }
 };
 
 export default function MatchIntro({ gameMode, onComplete }) {
-  const [step, setStep] = useState(-1); // -1 = mode title, 0-3 = countdown
+  const [step, setStep] = useState(0); // Starts immediately at 3
   const [finished, setFinished] = useState(false);
   const modeInfo = getModeIntro(gameMode);
 
@@ -40,17 +41,34 @@ export default function MatchIntro({ gameMode, onComplete }) {
   };
 
   useEffect(() => {
-    // Tournament-grade rhythmic arcade countdown sequence (~4.3s total, skippable anytime)
+    // 1-second per beat countdown with authentic arcade tones
+    soundService.playTone(600, 'sine', 0.12);
+
     const timers = [];
 
-    timers.push(setTimeout(() => setStep(0), 800));   // 3
-    timers.push(setTimeout(() => setStep(1), 1700));  // 2
-    timers.push(setTimeout(() => setStep(2), 2600));  // 1
-    timers.push(setTimeout(() => setStep(3), 3500));  // SOLVE!
+    // Step 1: "2" at 1000ms
+    timers.push(setTimeout(() => {
+      setStep(1);
+      soundService.playTone(600, 'sine', 0.12);
+    }, 1000));
+
+    // Step 2: "1" at 2000ms
+    timers.push(setTimeout(() => {
+      setStep(2);
+      soundService.playTone(600, 'sine', 0.12);
+    }, 2000));
+
+    // Step 3: "SOLVE!" at 3000ms
+    timers.push(setTimeout(() => {
+      setStep(3);
+      soundService.playTone(1200, 'sine', 0.25);
+    }, 3000));
+
+    // Complete at 3800ms
     timers.push(setTimeout(() => {
       setFinished(true);
       if (onComplete) onComplete();
-    }, 4300));
+    }, 3800));
 
     // Global skip hotkey (Space, Enter, Escape)
     const handleKey = (e) => {
@@ -68,13 +86,15 @@ export default function MatchIntro({ gameMode, onComplete }) {
 
   if (finished) return null;
 
+  const currentStepData = COUNTDOWN_STEPS[step] || COUNTDOWN_STEPS[0];
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       onClick={handleSkipNow}
-      title="Click or press Space to start immediately!"
+      title="Click or press Space to skip directly to game!"
       style={{
         position: 'fixed',
         inset: 0,
@@ -83,156 +103,111 @@ export default function MatchIntro({ gameMode, onComplete }) {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        background: 'radial-gradient(ellipse at center, rgba(10, 13, 20, 0.95) 0%, rgba(5, 7, 12, 0.99) 100%)',
+        background: 'radial-gradient(ellipse at center, rgba(5, 12, 28, 0.96) 0%, rgba(2, 4, 10, 0.99) 100%)',
         backdropFilter: 'blur(20px)',
         overflow: 'hidden',
-        cursor: 'pointer'
+        cursor: 'pointer',
+        userSelect: 'none'
       }}
     >
-      {/* Instant Skip Hint Pill */}
+      {/* Background Radial Glow */}
+      <div style={{
+        position: 'absolute',
+        width: '500px',
+        height: '500px',
+        borderRadius: '50%',
+        background: `radial-gradient(circle, ${currentStepData.color}25 0%, transparent 70%)`,
+        pointerEvents: 'none',
+        transition: 'all 0.5s ease'
+      }} />
+
+      {/* Mode Header */}
+      <motion.div
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '0.4rem',
+          marginBottom: '2rem'
+        }}
+      >
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.6rem',
+          fontFamily: 'var(--font-mono)',
+          fontSize: '0.9rem',
+          color: currentStepData.color,
+          letterSpacing: '0.15em',
+          fontWeight: 800,
+          textTransform: 'uppercase'
+        }}>
+          <span>{modeInfo.icon}</span>
+          <span>{modeInfo.name}</span>
+        </div>
+        <div style={{ fontSize: '0.82rem', color: 'rgba(255, 255, 255, 0.6)', fontFamily: 'var(--font-mono)' }}>
+          {modeInfo.sub}
+        </div>
+      </motion.div>
+
+      {/* Main Animated Countdown Number */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={step}
+          initial={{ scale: 2.2, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.5, opacity: 0 }}
+          transition={{ duration: 0.35, ease: 'easeOut' }}
+          style={{
+            fontSize: step === 3 ? 'clamp(3.5rem, 12vw, 6.5rem)' : 'clamp(6rem, 20vw, 10rem)',
+            fontWeight: 900,
+            fontFamily: 'var(--font-display)',
+            color: currentStepData.color,
+            textShadow: `0 0 50px ${currentStepData.color}`,
+            lineHeight: 1,
+            letterSpacing: step === 3 ? '0.08em' : '-0.02em',
+            textAlign: 'center'
+          }}
+        >
+          {currentStepData.label}
+        </motion.div>
+      </AnimatePresence>
+
+      {/* Step Subtitle */}
+      <motion.div
+        key={`sub-${step}`}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        style={{
+          marginTop: '1.25rem',
+          fontSize: '1rem',
+          fontFamily: 'var(--font-mono)',
+          color: currentStepData.color,
+          fontWeight: 800,
+          letterSpacing: '0.12em'
+        }}
+      >
+        {currentStepData.subtitle}
+      </motion.div>
+
+      {/* Skip Prompt */}
       <div style={{
         position: 'absolute',
         bottom: '2rem',
-        padding: '0.4rem 1rem',
+        padding: '0.45rem 1.1rem',
         borderRadius: '20px',
-        background: 'rgba(255, 255, 255, 0.1)',
-        border: '1px solid rgba(255, 215, 0, 0.3)',
-        color: '#FFD700',
-        fontSize: '0.8rem',
+        background: 'rgba(255, 255, 255, 0.06)',
+        border: '1px solid rgba(255, 255, 255, 0.15)',
+        color: 'rgba(255, 255, 255, 0.7)',
+        fontSize: '0.78rem',
         fontWeight: 700,
+        fontFamily: 'var(--font-mono)',
         letterSpacing: '0.05em'
       }}>
-        ⚡ Click anywhere or press <kbd style={{ background: '#333', padding: '2px 6px', borderRadius: '4px' }}>SPACE</kbd> to start instantly
+        ⚡ Click or press <kbd style={{ background: 'rgba(0, 240, 255, 0.2)', color: '#00F0FF', padding: '2px 6px', borderRadius: '4px', border: '1px solid #00F0FF' }}>SPACE</kbd> to skip countdown
       </div>
-      {/* Background Particles */}
-      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
-        {Array.from({ length: 20 }).map((_, i) => (
-          <motion.div
-            key={i}
-            initial={{ opacity: 0, y: '100vh' }}
-            animate={{
-              opacity: [0, 0.6, 0],
-              y: [100, -window.innerHeight],
-              x: Math.random() * 40 - 20
-            }}
-            transition={{
-              duration: 3 + Math.random() * 2,
-              delay: Math.random() * 2,
-              repeat: Infinity,
-              ease: 'easeOut'
-            }}
-            style={{
-              position: 'absolute',
-              left: `${Math.random() * 100}%`,
-              bottom: 0,
-              width: '4px',
-              height: '4px',
-              borderRadius: '50%',
-              background: 'var(--accent-gold)',
-              boxShadow: '0 0 8px var(--accent-gold-glow)'
-            }}
-          />
-        ))}
-      </div>
-
-      <AnimatePresence mode="wait">
-        {step === -1 && (
-          <motion.div
-            key="mode-title"
-            initial={{ scale: 0.3, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 1.5, opacity: 0 }}
-            transition={{ type: 'spring', stiffness: 200, damping: 15 }}
-            style={{ textAlign: 'center' }}
-          >
-            <motion.div
-              animate={{ rotate: [0, -10, 10, -5, 5, 0] }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-              style={{ fontSize: '4rem', marginBottom: '0.5rem' }}
-            >
-              {modeInfo.icon}
-            </motion.div>
-            <div style={{
-              fontSize: '2.5rem',
-              fontWeight: 900,
-              fontFamily: 'var(--font-display)',
-              letterSpacing: '-0.02em',
-              background: 'var(--grad-banana)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent'
-            }}>
-              {modeInfo.name}
-            </div>
-            <div style={{
-              fontSize: '1rem',
-              color: 'var(--text-secondary)',
-              marginTop: '0.5rem',
-              fontWeight: 600
-            }}>
-              {modeInfo.sub}
-            </div>
-          </motion.div>
-        )}
-
-        {step >= 0 && step <= 3 && (
-          <motion.div
-            key={`step-${step}`}
-            initial={{ scale: 3, opacity: 0, rotate: -20 }}
-            animate={{ scale: 1, opacity: 1, rotate: 0 }}
-            exit={{ scale: 0.3, opacity: 0, y: -80 }}
-            transition={{
-              type: 'spring',
-              stiffness: 300,
-              damping: 20,
-              duration: 0.5
-            }}
-            style={{ textAlign: 'center' }}
-          >
-            <div style={{
-              fontSize: step === 3 ? '5rem' : '8rem',
-              fontWeight: 900,
-              fontFamily: 'var(--font-display)',
-              color: COUNTDOWN_STEPS[step].color,
-              textShadow: `0 0 60px ${COUNTDOWN_STEPS[step].color}`,
-              lineHeight: 1
-            }}>
-              {COUNTDOWN_STEPS[step].label}
-            </div>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.15 }}
-              style={{
-                fontSize: '1.2rem',
-                color: 'var(--text-secondary)',
-                marginTop: '1rem',
-                fontWeight: 600
-              }}
-            >
-              {COUNTDOWN_STEPS[step].subtitle}
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Expanding Ring Effect */}
-      {step >= 0 && (
-        <motion.div
-          key={`ring-${step}`}
-          initial={{ scale: 0, opacity: 0.5 }}
-          animate={{ scale: 4, opacity: 0 }}
-          transition={{ duration: 0.8, ease: 'easeOut' }}
-          style={{
-            position: 'absolute',
-            width: '100px',
-            height: '100px',
-            borderRadius: '50%',
-            border: `3px solid ${COUNTDOWN_STEPS[step]?.color || 'var(--accent-gold)'}`,
-            pointerEvents: 'none'
-          }}
-        />
-      )}
     </motion.div>
   );
 }
-
