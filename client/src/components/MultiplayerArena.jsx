@@ -244,9 +244,19 @@ export default function MultiplayerArena({ currentUser, initialRoomId = null, on
     }
   }, [initialRoomId, handleJoinRoom, roomState]);
 
+  // Derive best invite URL for other devices (Wi-Fi LAN IP vs current origin)
+  const getInviteUrl = useCallback(() => {
+    if (!roomId) return '';
+    // If browsing on localhost and server detected LAN/Wi-Fi IP, use Wi-Fi link so phones/laptops can connect
+    if (roomState?.lanUrl && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+      return roomState.lanUrl;
+    }
+    return `${window.location.origin}/?room=${roomId}`;
+  }, [roomId, roomState?.lanUrl]);
+
   // Copy shareable battle link to clipboard
   const handleCopyLink = () => {
-    const url = `${window.location.origin}/?room=${roomId}`;
+    const url = getInviteUrl();
     navigator.clipboard.writeText(url).then(() => {
       setCopiedLink(true);
       setTimeout(() => setCopiedLink(false), 2500);
@@ -536,6 +546,21 @@ export default function MultiplayerArena({ currentUser, initialRoomId = null, on
                 {roomState.id}
               </div>
 
+              <div style={{
+                background: 'rgba(0, 240, 255, 0.08)',
+                border: '1px solid rgba(0, 240, 255, 0.35)',
+                borderRadius: '8px',
+                padding: '0.65rem 0.85rem',
+                margin: '0.5rem 0 1rem 0',
+                fontFamily: 'var(--font-mono)',
+                fontSize: '0.82rem',
+                color: '#00F0FF',
+                wordBreak: 'break-all',
+                textAlign: 'center'
+              }}>
+                {getInviteUrl()}
+              </div>
+
               <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
                 <motion.button
                   onClick={handleCopyLink}
@@ -544,33 +569,32 @@ export default function MultiplayerArena({ currentUser, initialRoomId = null, on
                   className="btn-primary"
                   style={{ flex: 1, padding: '0.75rem', fontSize: '0.9rem' }}
                 >
-                  {copiedLink ? '✅ LINK COPIED TO CLIPBOARD!' : '📋 COPY INVITE LINK FOR FRIEND'}
+                  {copiedLink ? '✅ LINK COPIED TO CLIPBOARD!' : '📋 COPY WI-FI BATTLE LINK'}
                 </motion.button>
               </div>
 
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.75rem' }}>
-                Send this link to your friend. When they open it, both screens connect automatically!
+              <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.75rem' }}>
+                Send this link to your friend on the same Wi-Fi. When they open it, both screens connect automatically!
               </div>
 
-              {typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (
+              {roomState?.lanIp && roomState.lanIp !== 'localhost' && (
                 <div style={{
-                  background: 'rgba(245, 158, 11, 0.12)',
-                  border: '1px solid rgba(245, 158, 11, 0.35)',
+                  background: 'rgba(16, 185, 129, 0.1)',
+                  border: '1px solid rgba(16, 185, 129, 0.35)',
                   borderRadius: '8px',
                   padding: '0.75rem',
                   marginTop: '1rem',
                   fontSize: '0.8rem',
-                  color: '#FDE68A',
+                  color: '#A7F3D0',
                   textAlign: 'left',
                   lineHeight: 1.5
                 }}>
-                  <div style={{ fontWeight: 800, marginBottom: '0.25rem', color: '#FFD700' }}>
-                    📱 Playing on another phone or device?
+                  <div style={{ fontWeight: 800, marginBottom: '0.25rem', color: '#10B981', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    <span>📶</span> Wi-Fi Host Detected: <code>{roomState.lanIp}</code>
                   </div>
                   <div>
-                    • <strong>Same Wi-Fi</strong>: On your phone/laptop, open your computer&apos;s network URL (e.g. <code>http://192.168.x.x:3000</code>).<br />
-                    • <strong>Over the Internet</strong>: Open a tunnel via <code>npx localtunnel --port 3000</code> or ngrok.<br />
-                    • Your friend can also simply open the game and type Room Code: <strong>{roomState.id}</strong>!
+                    • Friends on your phone, laptop, or tablet on the same Wi-Fi can join instantly via the copied link.<br />
+                    • Or they can visit <code>http://{roomState.lanIp}:3000</code> and enter Code: <strong>{roomState.id}</strong>
                   </div>
                 </div>
               )}

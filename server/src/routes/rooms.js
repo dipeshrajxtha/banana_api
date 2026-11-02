@@ -10,12 +10,33 @@
 
 import { Router } from 'express';
 import crypto from 'node:crypto';
+import os from 'node:os';
 import { bananaApiService } from '../services/bananaApiService.js';
 
 const router = Router();
 
 // In-memory Room State Store: Map<roomId, RoomState>
 const rooms = new Map();
+
+/**
+ * Discovers the host machine's active local network IPv4 address (e.g. Wi-Fi / LAN IP).
+ * Allows friends on other phones, laptops, and tablets on the same Wi-Fi to connect instantly.
+ */
+function getLanIpAddress() {
+  try {
+    const nets = os.networkInterfaces();
+    for (const name of Object.keys(nets)) {
+      for (const net of nets[name]) {
+        if (net.family === 'IPv4' && !net.internal && !net.address.startsWith('169.254')) {
+          return net.address;
+        }
+      }
+    }
+  } catch {
+    // Fallback if network interfaces unreadable
+  }
+  return 'localhost';
+}
 
 // Room cleanup interval (purge rooms inactive for > 2 hours)
 const cleanupTimer = setInterval(() => {
@@ -50,6 +71,9 @@ function broadcastRoomUpdate(room) {
  * Strips SSE connection objects from room payload for client response
  */
 function getSanitizedRoom(room) {
+  const lanIp = getLanIpAddress();
+  const lanUrl = lanIp !== 'localhost' ? `http://${lanIp}:3000/?room=${room.id}` : `http://localhost:3000/?room=${room.id}`;
+
   return {
     id: room.id,
     durationMinutes: room.durationMinutes,
@@ -57,6 +81,8 @@ function getSanitizedRoom(room) {
     startTime: room.startTime,
     endTime: room.endTime,
     status: room.status, // 'waiting' | 'ready' | 'playing' | 'finished'
+    lanIp,
+    lanUrl,
     host: {
       id: room.host.id,
       name: room.host.name,
