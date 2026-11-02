@@ -1,12 +1,14 @@
 /**
  * @file Numpad.jsx
- * @description Interactive arcade keypad component with tactile click states, hotkey hints, and EventBus integration.
+ * @description Tactile 3D-press arcade keypad with depth shadows, pressed states, and EventBus integration.
+ * Features realistic button depth via CSS border-bottom trick, hover glow, and Framer Motion press animations.
  * @module client/components/Numpad
  * @author Dipesh Raj Shrestha
  * @reference University of Bedfordshire - CIS046-3 Software For Enterprise (Theme 2: Event-Driven Programming)
  */
 
 import React from 'react';
+import { motion } from 'framer-motion';
 import { GAME_EVENTS } from '@banana-quest/shared';
 import { eventBus } from '../events/eventBus.js';
 
@@ -46,26 +48,23 @@ export default function Numpad({ onDigitPress, onClear, onSubmit, disabled = fal
         gridTemplateColumns: 'repeat(3, 1fr)',
         gap: '0.65rem'
       }}>
-        {digits.map((digit) => {
+        {digits.map((digit, index) => {
           const isSelected = activeDigit === digit;
           return (
-            <button
+            <motion.button
               key={digit}
               type="button"
               disabled={disabled}
               onClick={() => handleDigit(digit)}
-              className="numpad-btn"
-              style={{
-                height: '62px',
-                background: isSelected ? 'var(--accent-gold)' : undefined,
-                color: isSelected ? '#000' : undefined,
-                borderColor: isSelected ? 'var(--accent-yellow)' : undefined,
-                boxShadow: isSelected ? 'var(--shadow-glow)' : undefined,
-                transform: isSelected ? 'scale(1.05)' : undefined
-              }}
+              className={`numpad-btn-3d ${isSelected ? 'selected' : ''}`}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.03, type: 'spring', stiffness: 400, damping: 25 }}
+              whileTap={!disabled ? { scale: 0.92, y: 3 } : {}}
+              style={{ height: '62px' }}
             >
               <span>{digit}</span>
-            </button>
+            </motion.button>
           );
         })}
       </div>
@@ -77,50 +76,41 @@ export default function Numpad({ onDigitPress, onClear, onSubmit, disabled = fal
         gap: '0.65rem'
       }}>
         {/* Clear Button */}
-        <button
+        <motion.button
           type="button"
           disabled={disabled || activeDigit === null}
           onClick={handleClear}
-          className="btn-secondary"
+          className="numpad-btn-3d"
+          whileTap={!(disabled || activeDigit === null) ? { scale: 0.92, y: 3 } : {}}
           style={{
             height: '62px',
-            borderRadius: 'var(--radius-md)',
-            display: 'flex',
             flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: 0
+            fontSize: '1.25rem'
           }}
           title="Clear digit (Backspace)"
         >
-          <span style={{ fontSize: '1.25rem', lineHeight: 1 }}>⌫</span>
-          <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: '2px' }}>Clear</span>
-        </button>
+          <span style={{ lineHeight: 1 }}>⌫</span>
+          <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)', marginTop: '2px' }}>Clear</span>
+        </motion.button>
 
         {/* Digit 0 */}
-        <button
+        <motion.button
           type="button"
           disabled={disabled}
           onClick={() => handleDigit(0)}
-          className="numpad-btn"
-          style={{
-            height: '62px',
-            background: activeDigit === 0 ? 'var(--accent-gold)' : undefined,
-            color: activeDigit === 0 ? '#000' : undefined,
-            borderColor: activeDigit === 0 ? 'var(--accent-yellow)' : undefined,
-            boxShadow: activeDigit === 0 ? 'var(--shadow-glow)' : undefined,
-            transform: activeDigit === 0 ? 'scale(1.05)' : undefined
-          }}
+          className={`numpad-btn-3d ${activeDigit === 0 ? 'selected' : ''}`}
+          whileTap={!disabled ? { scale: 0.92, y: 3 } : {}}
+          style={{ height: '62px' }}
         >
           <span>0</span>
-        </button>
+        </motion.button>
 
         {/* Submit Button */}
-        <button
+        <motion.button
           type="button"
           disabled={disabled || activeDigit === null}
           onClick={handleSubmit}
-          className="btn-primary"
+          whileTap={!(disabled || activeDigit === null) ? { scale: 0.95, y: 2 } : {}}
           style={{
             height: '62px',
             borderRadius: 'var(--radius-md)',
@@ -130,24 +120,39 @@ export default function Numpad({ onDigitPress, onClear, onSubmit, disabled = fal
             justifyContent: 'center',
             padding: 0,
             opacity: activeDigit === null ? 0.4 : 1,
-            cursor: activeDigit === null ? 'not-allowed' : 'pointer'
+            cursor: activeDigit === null ? 'not-allowed' : 'pointer',
+            background: activeDigit !== null ? 'var(--grad-banana)' : 'linear-gradient(180deg, #2A3555 0%, #1A2238 100%)',
+            color: activeDigit !== null ? '#000' : 'var(--text-muted)',
+            border: '1px solid',
+            borderColor: activeDigit !== null ? 'var(--accent-yellow)' : 'var(--border-subtle)',
+            borderBottom: activeDigit !== null ? '4px solid #B8860B' : '4px solid rgba(0,0,0,0.5)',
+            fontFamily: 'var(--font-display)',
+            boxShadow: activeDigit !== null
+              ? '0 4px 8px rgba(0,0,0,0.3), 0 0 20px var(--accent-gold-glow)'
+              : '0 4px 8px rgba(0,0,0,0.3)',
+            transition: 'all 100ms ease'
           }}
           title="Submit answer (Enter)"
         >
-          <span style={{ fontSize: '1.2rem', lineHeight: 1, fontWeight: 900 }}>ENTER ↵</span>
-          <span style={{ fontSize: '0.65rem', color: 'rgba(0,0,0,0.6)', marginTop: '2px', fontWeight: 700 }}>Confirm</span>
-        </button>
+          <span style={{ fontSize: '1.1rem', lineHeight: 1, fontWeight: 900 }}>ENTER ↵</span>
+          <span style={{ fontSize: '0.6rem', marginTop: '2px', fontWeight: 700, opacity: 0.7 }}>Confirm</span>
+        </motion.button>
       </div>
 
       {/* Keyboard hotkey assist hint */}
-      <div style={{
-        textAlign: 'center',
-        fontSize: '0.75rem',
-        color: 'var(--text-muted)',
-        marginTop: '0.35rem'
-      }}>
-        💡 Tip: You can also use your physical <strong style={{ color: 'var(--text-secondary)' }}>Keyboard</strong> (0–9 & Enter)
-      </div>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.5 }}
+        style={{
+          textAlign: 'center',
+          fontSize: '0.75rem',
+          color: 'var(--text-muted)',
+          marginTop: '0.35rem'
+        }}
+      >
+        💡 Tip: You can also use your physical <strong style={{ color: 'var(--text-secondary)' }}>Keyboard</strong> (0–9 &amp; Enter)
+      </motion.div>
     </div>
   );
 }

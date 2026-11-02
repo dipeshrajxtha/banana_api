@@ -27,7 +27,7 @@ export const config = {
   // Authentication & Security (Theme 4)
   auth: {
     jwtSecret: process.env.JWT_SECRET || 'dev_banana_quest_jwt_secret_key_change_in_production_2026',
-    jwtExpiresIn: process.env.JWT_EXPIRES_IN || '7d',
+    jwtExpiresIn: process.env.JWT_EXPIRES_IN || '2h',
     cookieName: process.env.COOKIE_NAME || 'banana_quest_session',
     googleClientId: process.env.GOOGLE_CLIENT_ID || ''
   },
@@ -35,7 +35,7 @@ export const config = {
   // External Interoperability Services (Theme 3)
   services: {
     bananaApiUrl: process.env.BANANA_API_URL || 'https://marcconrad.com/uob/banana/api.php?out=json',
-    bananaApiTimeoutMs: parseInt(process.env.BANANA_API_TIMEOUT_MS, 10) || 8000,
+    bananaApiTimeoutMs: parseInt(process.env.BANANA_API_TIMEOUT_MS, 10) || 3000,
     bananaApiCacheTtlMs: parseInt(process.env.BANANA_API_CACHE_TTL_MS, 10) || 60000
   },
 

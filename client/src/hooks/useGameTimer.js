@@ -1,6 +1,8 @@
 /**
  * @file useGameTimer.js
- * @description High-precision requestAnimationFrame delta-timing countdown hook with EventBus signal emission.
+ * @description Bulletproof, wall-clock synchronized countdown hook using Date.now().
+ * Completely immune to monitor refresh rates (60Hz/144Hz/240Hz), frame throttling, or timing drift.
+ * Updates state at steady 100ms intervals for silky, jitter-free countdowns.
  * @module client/hooks/useGameTimer
  * @author Dipesh Raj Shrestha
  * @reference University of Bedfordshire - CIS046-3 Software For Enterprise (Theme 2: Event-Driven Programming)
@@ -11,20 +13,19 @@ import { GAME_EVENTS } from '@banana-quest/shared';
 import { eventBus } from '../events/eventBus.js';
 
 /**
- * High-precision game timer driven by requestAnimationFrame.
+ * High-precision game timer driven by Date.now() wall-clock delta.
  * Emits signals over the decoupled EventBus on warning threshold and timeout.
  * @param {object} options
- * @param {number} [options.warningThresholdMs=4000] - Threshold when timer enters warning state
+ * @param {number} [options.warningThresholdMs=5000] - Threshold when timer enters warning state
  * @param {Function} [options.onTimeout] - Callback invoked when timer expires
  */
-export function useGameTimer({ warningThresholdMs = 4000, onTimeout } = {}) {
+export function useGameTimer({ warningThresholdMs = 5000, onTimeout } = {}) {
   const [timeLeftMs, setTimeLeftMs] = useState(0);
   const [totalDurationMs, setTotalDurationMs] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
 
-  const requestRef = useRef(null);
-  const startTimeRef = useRef(null);
-  const durationRef = useRef(0);
+  const endTimeRef = useRef(0);
+  const intervalRef = useRef(null);
   const onTimeoutRef = useRef(onTimeout);
   const hasEmittedWarningRef = useRef(false);
 
@@ -32,63 +33,75 @@ export function useGameTimer({ warningThresholdMs = 4000, onTimeout } = {}) {
     onTimeoutRef.current = onTimeout;
   }, [onTimeout]);
 
-  const tick = useCallback((now) => {
-    if (!startTimeRef.current) startTimeRef.current = now;
-
-    const elapsed = now - startTimeRef.current;
-    const remaining = Math.max(0, durationRef.current - elapsed);
-
-    setTimeLeftMs(remaining);
-
-    // Emit event bus signal on warning threshold
-    if (remaining <= warningThresholdMs && remaining > 0 && !hasEmittedWarningRef.current) {
-      hasEmittedWarningRef.current = true;
-      eventBus.emit(GAME_EVENTS.TIMER_WARNING, { remainingMs: remaining });
+  const stop = useCallback(() => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
     }
-
-    if (remaining > 0) {
-      requestRef.current = requestAnimationFrame(tick);
-    } else {
-      setIsRunning(false);
-      cancelAnimationFrame(requestRef.current);
-      eventBus.emit(GAME_EVENTS.TIMER_EXPIRED);
-      if (onTimeoutRef.current) {
-        onTimeoutRef.current();
-      }
-    }
-  }, [warningThresholdMs]);
+    setIsRunning(false);
+  }, []);
 
   const start = useCallback((durationMs) => {
-    cancelAnimationFrame(requestRef.current);
-    durationRef.current = durationMs;
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+    if (!durationMs || durationMs <= 0) return;
+
+    const endTime = Date.now() + durationMs;
+    endTimeRef.current = endTime;
     setTotalDurationMs(durationMs);
     setTimeLeftMs(durationMs);
     setIsRunning(true);
     hasEmittedWarningRef.current = false;
-    startTimeRef.current = null;
-    requestRef.current = requestAnimationFrame(tick);
-  }, [tick]);
 
-  const stop = useCallback(() => {
-    setIsRunning(false);
-    cancelAnimationFrame(requestRef.current);
-    setTimeLeftMs(0);
-    hasEmittedWarningRef.current = false;
-  }, []);
+    intervalRef.current = setInterval(() => {
+      const now = Date.now();
+      const remaining = Math.max(0, endTimeRef.current - now);
+      setTimeLeftMs(remaining);
+
+      // Warning siren at or below threshold
+      if (remaining <= warningThresholdMs && remaining > 0 && !hasEmittedWarningRef.current) {
+        hasEmittedWarningRef.current = true;
+        eventBus.emit(GAME_EVENTS.TIMER_WARNING, { remainingMs: remaining });
+      }
+
+      // Timer reached 0
+      if (remaining <= 0) {
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current);
+          intervalRef.current = null;
+        }
+        setIsRunning(false);
+        setTimeLeftMs(0);
+        eventBus.emit(GAME_EVENTS.TIMER_EXPIRED);
+        if (onTimeoutRef.current) {
+          onTimeoutRef.current();
+        }
+      }
+    }, 100);
+  }, [warningThresholdMs]);
 
   const reset = useCallback((newDurationMs) => {
-    cancelAnimationFrame(requestRef.current);
-    const d = newDurationMs || durationRef.current;
-    durationRef.current = d;
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+    const d = newDurationMs || 0;
     setTotalDurationMs(d);
     setTimeLeftMs(d);
     setIsRunning(false);
     hasEmittedWarningRef.current = false;
-    startTimeRef.current = null;
   }, []);
 
+  // Clean up interval on unmount
   useEffect(() => {
-    return () => cancelAnimationFrame(requestRef.current);
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
   }, []);
 
   const progress = totalDurationMs > 0 ? (timeLeftMs / totalDurationMs) : 0;

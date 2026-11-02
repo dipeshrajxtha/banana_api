@@ -21,6 +21,8 @@ import authRouter from './routes/auth.js';
 import adminRouter from './routes/admin.js';
 import bananaRouter from './routes/banana.js';
 import scoresRouter from './routes/scores.js';
+import roomsRouter from './routes/rooms.js';
+import videoRouter from './routes/video.js';
 
 
 
@@ -34,7 +36,7 @@ app.use(helmet({
 
 // 2. CORS (Cross-Origin Resource Sharing)
 app.use(cors({
-  origin: config.clientUrl,
+  origin: config.isProduction ? config.clientUrl : true,
   credentials: true
 }));
 
@@ -54,6 +56,8 @@ app.use('/api/auth', authRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/banana', bananaRouter);
 app.use('/api/scores', scoresRouter);
+app.use('/api/rooms', roomsRouter);
+app.use('/api/video', videoRouter);
 
 
 

@@ -6,10 +6,10 @@
 
 import { config } from '../config/index.js';
 
-const COOKIE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
-
 /**
- * Attaches the signed JWT inside an HttpOnly, SameSite cookie
+ * Attaches the signed JWT inside an HttpOnly, SameSite Session cookie.
+ * By omitting maxAge/expires, it acts as a true Session Cookie:
+ * automatically evicted when the browser closes, system restarts, or upon session timeout.
  * @param {import('express').Response} res
  * @param {string} token
  */
@@ -18,7 +18,6 @@ export function setAuthCookie(res, token) {
     httpOnly: true,
     secure: config.isProduction,
     sameSite: config.isProduction ? 'none' : 'lax',
-    maxAge: COOKIE_MAX_AGE_MS,
     path: '/'
   });
 }
