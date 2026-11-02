@@ -4,41 +4,42 @@
    ========================================================================== */
 
 :root {
-  /* Color Palette */
-  --bg-primary: #0A0D14;
-  --bg-secondary: #111726;
-  --bg-tertiary: #1A2238;
-  --bg-glass: rgba(17, 24, 39, 0.75);
-  --bg-glass-elevated: rgba(26, 34, 56, 0.85);
+  /* Color Palette — Sci-Fi Quantum Hologram Lab */
+  --bg-primary: #050814;
+  --bg-secondary: #0A1128;
+  --bg-tertiary: #101E3F;
+  --bg-glass: rgba(10, 17, 40, 0.82);
+  --bg-glass-elevated: rgba(16, 30, 63, 0.9);
 
-  /* Brand Accents — Authentic Minion Palette */
-  --minion-yellow: #FFD200;
+  /* Brand Accents — Electric Cyber & Holographic Palette */
+  --minion-yellow: #FFD700;
   --minion-yellow-bright: #FFE600;
-  --minion-denim: #1E4E7A;
-  --minion-denim-dark: #123456;
-  --minion-stitching: 2px dashed #FFD200;
+  --minion-denim: #0284C7;
+  --minion-denim-dark: #075985;
+  --minion-stitching: 2px dashed #00F0FF;
   
-  --accent-gold: #FFD200;
-  --accent-gold-glow: rgba(255, 210, 0, 0.45);
+  --accent-gold: #FFD700;
+  --accent-gold-glow: rgba(255, 215, 0, 0.5);
   --accent-yellow: #FFE600;
-  --accent-cyan: #38BDF8;
+  --accent-cyan: #00F0FF;
+  --accent-cyan-glow: rgba(0, 240, 255, 0.5);
   --accent-purple: #8B5CF6;
   --accent-emerald: #10B981;
   --accent-rose: #EF4444;
 
   /* Gradients */
-  --grad-banana: linear-gradient(135deg, #FFD200 0%, #FFE600 50%, #FBBF24 100%);
-  --grad-denim: linear-gradient(135deg, #2E6B9E 0%, #1E4E7A 50%, #123456 100%);
-  --grad-chrome: linear-gradient(135deg, #FFFFFF 0%, #D1D5DB 35%, #9CA3AF 70%, #4B5563 100%);
-  --grad-cyber: linear-gradient(135deg, #8B5CF6 0%, #3B82F6 50%, #06B6D4 100%);
+  --grad-banana: linear-gradient(135deg, #00F0FF 0%, #38BDF8 35%, #FFD700 80%, #F59E0B 100%);
+  --grad-denim: linear-gradient(135deg, #0284C7 0%, #0369A1 50%, #075985 100%);
+  --grad-chrome: linear-gradient(135deg, #FFFFFF 0%, #E0F2FE 35%, #94A3B8 70%, #334155 100%);
+  --grad-cyber: linear-gradient(135deg, #00F0FF 0%, #38BDF8 50%, #8B5CF6 100%);
   --grad-danger: linear-gradient(135deg, #EF4444 0%, #F87171 100%);
   --grad-success: linear-gradient(135deg, #10B981 0%, #34D399 100%);
-  --grad-surface: linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0) 100%);
+  --grad-surface: linear-gradient(180deg, rgba(0, 240, 255, 0.15) 0%, rgba(255, 255, 255, 0) 100%);
 
   /* Borders & Dividers */
-  --border-subtle: rgba(255, 255, 255, 0.08);
-  --border-medium: rgba(255, 255, 255, 0.15);
-  --border-highlight: rgba(245, 158, 11, 0.4);
+  --border-subtle: rgba(0, 240, 255, 0.15);
+  --border-medium: rgba(0, 240, 255, 0.3);
+  --border-highlight: rgba(0, 240, 255, 0.6);
 
   /* Typography */
   --font-display: 'Outfit', sans-serif;
@@ -82,11 +83,11 @@ body {
   min-height: 100vh;
   overflow-x: hidden;
   background-image: 
-    radial-gradient(circle at 15% 15%, rgba(139, 92, 246, 0.08) 0%, transparent 40%),
-    radial-gradient(circle at 85% 85%, rgba(245, 158, 11, 0.08) 0%, transparent 40%),
-    linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
-  background-size: 100% 100%, 100% 100%, 40px 40px, 40px 40px;
+    radial-gradient(circle at 15% 15%, rgba(0, 240, 255, 0.12) 0%, transparent 45%),
+    radial-gradient(circle at 85% 85%, rgba(255, 215, 0, 0.08) 0%, transparent 45%),
+    linear-gradient(rgba(0, 240, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 240, 255, 0.035) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 36px 36px, 36px 36px;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -97,7 +98,7 @@ body {
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 240, 255, 0.08);
   position: relative;
   overflow: hidden;
 }

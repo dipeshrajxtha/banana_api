@@ -1,9 +1,10 @@
 /**
  * @file CinematicIntroModal.jsx
  * @description Full-page cinematic intro video screen — plays on first app launch
- * like AAA game intros. Covers the entire viewport with the intro video, a sleek
- * bottom progress bar, and a "Skip Intro" button. When skipped or finished, the
- * user is taken to the main dashboard (not directly into gameplay).
+ * like AAA game intros. Covers the entire viewport with uncropped, crisp video rendering,
+ * ambient sci-fi laboratory backlight matching the intro video, bottom progress bar,
+ * and a "Skip Intro" button. The timer display is omitted as requested.
+ * When skipped or finished, the user is taken smoothly to the dashboard.
  * @module client/components/CinematicIntroModal
  * @author Dipesh Raj Shrestha
  * @reference University of Bedfordshire - CIS046-3 Software For Enterprise
@@ -135,15 +136,7 @@ export default function CinematicIntroModal({ isOpen, onClose }) {
     setIsPlaying(false);
     setHasEnded(true);
     setShowControls(true);
-    // Auto-skip to dashboard after a brief moment
     setTimeout(() => onClose(), 1200);
-  };
-
-  const formatTime = (seconds) => {
-    if (isNaN(seconds)) return '0:00';
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
@@ -161,15 +154,31 @@ export default function CinematicIntroModal({ isOpen, onClose }) {
           position: 'fixed',
           inset: 0,
           zIndex: 99999,
-          background: '#000',
+          background: '#040711',
           display: 'flex',
           flexDirection: 'column',
-          cursor: showControls ? 'default' : 'none'
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: showControls ? 'default' : 'none',
+          overflow: 'hidden'
         }}
         onClick={togglePlay}
         onMouseMove={resetControlsTimer}
       >
-        {/* Full-Page Video */}
+        {/* Ambient Sci-Fi Hologram Backlight Glow (Matching the Video's Teal & Gold Palette) */}
+        <div
+          style={{
+            position: 'absolute',
+            width: '85vw',
+            height: '65vh',
+            background: 'radial-gradient(ellipse at center, rgba(6, 182, 212, 0.28) 0%, rgba(245, 158, 11, 0.12) 45%, transparent 75%)',
+            filter: 'blur(90px)',
+            pointerEvents: 'none',
+            zIndex: 1
+          }}
+        />
+
+        {/* Crisp Full-Viewport Video Canvas (Contain mode preserves native 1:1 sharp clarity) */}
         <video
           ref={videoRef}
           preload="auto"
@@ -178,12 +187,18 @@ export default function CinematicIntroModal({ isOpen, onClose }) {
           onLoadedMetadata={handleLoadedMetadata}
           onEnded={handleVideoEnded}
           style={{
-            position: 'absolute',
-            inset: 0,
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            zIndex: 1
+            width: '100vw',
+            height: '100vh',
+            maxWidth: '100vw',
+            maxHeight: '100vh',
+            objectFit: 'contain',
+            position: 'relative',
+            zIndex: 2,
+            imageRendering: 'auto',
+            WebkitBackfaceVisibility: 'hidden',
+            backfaceVisibility: 'hidden',
+            transform: 'translateZ(0)',
+            filter: 'contrast(1.04) saturate(1.08)'
           }}
         >
           <source src="/assets/intro.mp4" type="video/mp4" />
@@ -202,18 +217,19 @@ export default function CinematicIntroModal({ isOpen, onClose }) {
                 top: '1.5rem',
                 left: '1.5rem',
                 zIndex: 20,
-                background: 'rgba(255, 215, 0, 0.95)',
-                color: '#000',
+                background: 'linear-gradient(135deg, #00F0FF 0%, #0284C7 100%)',
+                color: '#FFFFFF',
                 fontWeight: 800,
                 fontSize: '0.9rem',
-                padding: '0.6rem 1.2rem',
+                padding: '0.6rem 1.25rem',
                 borderRadius: '12px',
-                border: 'none',
+                border: '1.5px solid #00F0FF',
                 cursor: 'pointer',
-                boxShadow: '0 0 25px rgba(255, 215, 0, 0.5)',
+                boxShadow: '0 0 25px rgba(0, 240, 255, 0.55)',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '0.5rem'
+                gap: '0.5rem',
+                letterSpacing: '0.04em'
               }}
             >
               🔊 Tap to Unmute
@@ -239,16 +255,16 @@ export default function CinematicIntroModal({ isOpen, onClose }) {
               }}
             >
               <div style={{
-                width: '90px',
-                height: '90px',
+                width: '88px',
+                height: '88px',
                 borderRadius: '50%',
-                background: 'rgba(255, 215, 0, 0.85)',
-                color: '#000',
+                background: 'rgba(0, 240, 255, 0.9)',
+                color: '#040711',
                 fontSize: '2.2rem',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                boxShadow: '0 0 50px rgba(255, 215, 0, 0.6)',
+                boxShadow: '0 0 45px rgba(0, 240, 255, 0.65)',
                 paddingLeft: '5px'
               }}>
                 ▶
@@ -257,7 +273,7 @@ export default function CinematicIntroModal({ isOpen, onClose }) {
           )}
         </AnimatePresence>
 
-        {/* Video Ended Overlay — fades to black then closes */}
+        {/* Video Ended Overlay */}
         <AnimatePresence>
           {hasEnded && (
             <motion.div
@@ -267,7 +283,7 @@ export default function CinematicIntroModal({ isOpen, onClose }) {
                 position: 'absolute',
                 inset: 0,
                 zIndex: 30,
-                background: 'rgba(0, 0, 0, 0.85)',
+                background: 'rgba(4, 7, 17, 0.92)',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
@@ -282,25 +298,25 @@ export default function CinematicIntroModal({ isOpen, onClose }) {
                 transition={{ delay: 0.2 }}
                 style={{ textAlign: 'center' }}
               >
-                <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>🍌</div>
+                <div style={{ fontSize: '3.2rem', marginBottom: '0.5rem' }}>🍌</div>
                 <h2 style={{
-                  fontSize: '2rem',
+                  fontSize: '2.2rem',
                   fontWeight: 900,
-                  color: '#FFD700',
+                  color: '#00F0FF',
                   margin: 0,
-                  textShadow: '0 0 30px rgba(255, 215, 0, 0.5)'
+                  textShadow: '0 0 35px rgba(0, 240, 255, 0.6)'
                 }}>
                   BANANA QUEST
                 </h2>
-                <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.9rem', marginTop: '0.5rem' }}>
-                  Loading dashboard...
+                <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.92rem', marginTop: '0.5rem', fontFamily: 'monospace' }}>
+                  Loading quantum dashboard...
                 </p>
               </motion.div>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Bottom Controls Bar — progress bar + skip button */}
+        {/* Bottom Controls Bar — progress bar + skip button (No timer display) */}
         <AnimatePresence>
           {showControls && !hasEnded && (
             <motion.div
@@ -315,8 +331,8 @@ export default function CinematicIntroModal({ isOpen, onClose }) {
                 left: 0,
                 right: 0,
                 zIndex: 50,
-                background: 'linear-gradient(transparent, rgba(0,0,0,0.85))',
-                padding: '3rem 1.5rem 1.5rem 1.5rem',
+                background: 'linear-gradient(transparent, rgba(4, 7, 17, 0.95))',
+                padding: '3rem 2rem 1.6rem 2rem',
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '0.75rem'
@@ -327,7 +343,7 @@ export default function CinematicIntroModal({ isOpen, onClose }) {
                 onClick={handleSeek}
                 style={{
                   width: '100%',
-                  height: '6px',
+                  height: '5px',
                   background: 'rgba(255, 255, 255, 0.2)',
                   borderRadius: '3px',
                   cursor: 'pointer',
@@ -339,10 +355,10 @@ export default function CinematicIntroModal({ isOpen, onClose }) {
                 <div style={{
                   height: '100%',
                   width: `${progress}%`,
-                  background: 'linear-gradient(90deg, #FFD700, #F59E0B)',
+                  background: 'linear-gradient(90deg, #00F0FF 0%, #FFD700 100%)',
                   borderRadius: '3px',
                   transition: 'width 0.15s linear',
-                  boxShadow: '0 0 8px rgba(255, 215, 0, 0.5)'
+                  boxShadow: '0 0 10px rgba(0, 240, 255, 0.7)'
                 }} />
                 {/* Scrubber Thumb */}
                 <div style={{
@@ -350,29 +366,29 @@ export default function CinematicIntroModal({ isOpen, onClose }) {
                   top: '50%',
                   left: `${progress}%`,
                   transform: 'translate(-50%, -50%)',
-                  width: '14px',
-                  height: '14px',
+                  width: '12px',
+                  height: '12px',
                   borderRadius: '50%',
                   background: '#FFD700',
-                  boxShadow: '0 0 10px rgba(255, 215, 0, 0.7)',
+                  boxShadow: '0 0 12px rgba(255, 215, 0, 0.8)',
                   transition: 'left 0.15s linear'
                 }} />
               </div>
 
-              {/* Controls Row */}
+              {/* Controls Row (Timer removed per request) */}
               <div style={{
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center'
               }}>
-                {/* Left: Play/Pause + Mute + Time */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                {/* Left: Play/Pause + Mute */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                   <button
                     onClick={togglePlay}
                     style={{
                       background: 'none',
                       border: 'none',
-                      color: '#fff',
+                      color: '#00F0FF',
                       fontSize: '1.3rem',
                       cursor: 'pointer',
                       padding: '0.3rem',
@@ -389,7 +405,7 @@ export default function CinematicIntroModal({ isOpen, onClose }) {
                     style={{
                       background: 'none',
                       border: 'none',
-                      color: '#fff',
+                      color: '#00F0FF',
                       fontSize: '1.2rem',
                       cursor: 'pointer',
                       padding: '0.3rem',
@@ -400,37 +416,26 @@ export default function CinematicIntroModal({ isOpen, onClose }) {
                   >
                     {isMuted ? '🔇' : '🔊'}
                   </button>
-
-                  <span style={{
-                    fontFamily: 'monospace',
-                    fontSize: '0.85rem',
-                    color: 'rgba(255,255,255,0.7)',
-                    userSelect: 'none'
-                  }}>
-                    <span style={{ color: '#FFD700', fontWeight: 700 }}>{formatTime(currentTime)}</span>
-                    {' / '}
-                    {formatTime(duration)}
-                  </span>
                 </div>
 
                 {/* Right: Skip Intro Button */}
                 <motion.button
                   onClick={onClose}
-                  whileHover={{ scale: 1.05, backgroundColor: 'rgba(255, 215, 0, 0.25)' }}
+                  whileHover={{ scale: 1.05, boxShadow: '0 0 25px rgba(255, 215, 0, 0.5)' }}
                   whileTap={{ scale: 0.95 }}
                   style={{
-                    background: 'rgba(255, 255, 255, 0.1)',
-                    border: '1.5px solid rgba(255, 215, 0, 0.6)',
+                    background: 'rgba(255, 215, 0, 0.12)',
+                    border: '1.5px solid #FFD700',
                     color: '#FFD700',
                     fontWeight: 800,
                     fontSize: '0.95rem',
-                    padding: '0.55rem 1.5rem',
+                    padding: '0.55rem 1.6rem',
                     borderRadius: '10px',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.5rem',
-                    letterSpacing: '0.03em',
+                    letterSpacing: '0.04em',
                     backdropFilter: 'blur(8px)',
                     transition: 'all 0.2s ease'
                   }}

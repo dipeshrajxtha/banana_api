@@ -358,19 +358,19 @@ export default function App() {
             <motion.button
               onClick={() => setShowCinematicModal(true)}
               className="btn-secondary"
-              whileHover={{ scale: 1.05 }}
+              whileHover={{ scale: 1.05, boxShadow: '0 0 15px rgba(0, 240, 255, 0.4)' }}
               whileTap={{ scale: 0.95 }}
               style={{
                 padding: '0.5rem 0.9rem',
                 fontSize: '0.85rem',
                 borderRadius: 'var(--radius-sm)',
-                borderColor: '#FFD700',
-                color: '#FFD700',
+                borderColor: '#00F0FF',
+                color: '#00F0FF',
                 fontWeight: 700,
                 display: 'flex',
                 alignItems: 'center',
                 gap: '0.4rem',
-                background: 'rgba(255, 215, 0, 0.08)'
+                background: 'rgba(0, 240, 255, 0.08)'
               }}
               title="Watch the official 3D animated cinematic intro video"
             >
@@ -505,7 +505,7 @@ export default function App() {
                       position: 'relative',
                       overflow: 'hidden'
                     }}>
-                      {/* Authentic Minion Scientist Hero Centerpiece */}
+                      {/* Cyber-Minion Quantum Scientist Centerpiece (Direct Video Model Match) */}
                       <MinionCenterpiece />
 
                       <motion.div
@@ -516,16 +516,17 @@ export default function App() {
                           display: 'inline-flex',
                           alignItems: 'center',
                           gap: '0.5rem',
-                          padding: '0.35rem 0.85rem',
+                          padding: '0.35rem 0.95rem',
                           borderRadius: 'var(--radius-full)',
-                          background: 'rgba(245, 158, 11, 0.1)',
-                          border: '1px solid rgba(245, 158, 11, 0.3)',
+                          background: 'rgba(0, 240, 255, 0.1)',
+                          border: '1px solid rgba(0, 240, 255, 0.4)',
+                          boxShadow: '0 0 15px rgba(0, 240, 255, 0.2)',
                           marginBottom: '1.25rem'
                         }}
                       >
-                        <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: 'var(--accent-emerald)' }}></span>
-                        <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--accent-yellow)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                          CIS046-3 Enterprise Ready: 5 Arcade Modes Active
+                        <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: '#00F0FF', boxShadow: '0 0 8px #00F0FF' }}></span>
+                        <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#00F0FF', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--font-mono)' }}>
+                          CIS046-3 QUANTUM LAB // 5 ARCADE MODES ONLINE
                         </span>
                       </motion.div>
 
@@ -535,7 +536,7 @@ export default function App() {
                         transition={{ delay: 0.3 }}
                         style={{ fontSize: '3rem', fontWeight: 900, marginBottom: '1rem', lineHeight: 1.15 }}
                       >
-                        Master the Math. <span className="text-gradient-gold">Conquer the Quest.</span>
+                        Quantum Math Lab. <span className="text-gradient-gold">Conquer the Quest.</span>
                       </motion.h2>
 
                       <motion.p
