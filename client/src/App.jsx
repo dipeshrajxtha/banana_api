@@ -284,172 +284,244 @@ export default function App() {
         }}
       />
 
-      {/* Top Navigation Bar */}
+      {/* Top Cyber Navigation Bar (Game HUD Style) */}
       <header style={{
-        borderBottom: '1px solid var(--border-subtle)',
-        background: 'rgba(10, 13, 20, 0.85)',
-        backdropFilter: 'blur(16px)',
+        borderBottom: '1px solid rgba(0, 240, 255, 0.25)',
+        background: 'rgba(4, 7, 18, 0.94)',
+        backdropFilter: 'blur(20px)',
         position: 'sticky',
         top: 0,
-        zIndex: 50
+        zIndex: 50,
+        boxShadow: '0 4px 30px rgba(0, 0, 0, 0.8), 0 0 20px rgba(0, 240, 255, 0.08)'
       }}>
         <div style={{
-          maxWidth: '1200px',
+          maxWidth: '1240px',
           margin: '0 auto',
-          padding: '1rem 1.5rem',
+          padding: '0.85rem 1.5rem',
           display: 'flex',
           justifyContent: 'space-between',
-          alignItems: 'center'
+          alignItems: 'center',
+          gap: '1rem'
         }}>
           {/* Logo & Unit Branding */}
           <motion.div
             onClick={() => { setActiveGameMode(null); setActiveTab('welcome'); }}
             style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer' }}
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
           >
-            <motion.span
-              animate={{ rotate: [0, -10, 10, -5, 5, 0] }}
-              transition={{ repeat: Infinity, duration: 3, repeatDelay: 5 }}
-              style={{ fontSize: '1.8rem' }}
+            <motion.div
+              animate={{ rotate: [0, -10, 10, -5, 5, 0], scale: [1, 1.08, 1] }}
+              transition={{ repeat: Infinity, duration: 3, repeatDelay: 4 }}
+              style={{
+                fontSize: '1.9rem',
+                filter: 'drop-shadow(0 0 12px rgba(0, 240, 255, 0.6))'
+              }}
             >
               🍌
-            </motion.span>
+            </motion.div>
             <div>
-              <h1 style={{ fontSize: '1.25rem', fontWeight: 800, letterSpacing: '-0.02em', margin: 0 }}>
-                BANANA <span className="text-gradient-gold">QUEST</span>
-              </h1>
-              <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: 0 }}>
-                CIS046-3 Software For Enterprise
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <h1 style={{
+                  fontSize: '1.25rem',
+                  fontWeight: 900,
+                  letterSpacing: '0.04em',
+                  margin: 0,
+                  color: '#FFFFFF',
+                  fontFamily: 'var(--font-display)'
+                }}>
+                  BANANA <span style={{
+                    background: 'linear-gradient(135deg, #00F0FF 0%, #FFD700 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent'
+                  }}>QUEST</span>
+                </h1>
+                <span className="cyber-badge" style={{ fontSize: '0.65rem', padding: '0.15rem 0.45rem' }}>MK-IV</span>
+              </div>
+              <p style={{ fontSize: '0.72rem', color: '#38BDF8', margin: 0, fontFamily: 'var(--font-mono)', letterSpacing: '0.06em' }}>
+                QUANTUM LAB // CIS046-3
               </p>
             </div>
           </motion.div>
 
-          {/* Navigation Links */}
-          <nav style={{ display: 'flex', gap: '0.5rem' }}>
-            {['welcome', 'modes', 'leaderboard', 'architecture'].map(tab => (
-              <motion.button
-                key={tab}
-                onClick={() => {
-                  setActiveGameMode(null);
-                  setActiveTab(tab);
-                  if (tab === 'architecture') {
-                    handleFetchTelemetry();
-                    setBusEvents(eventBus.getHistory());
-                  }
-                }}
-                className="btn-secondary"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                style={{
-                  padding: '0.5rem 1rem',
-                  fontSize: '0.85rem',
-                  borderRadius: 'var(--radius-sm)',
-                  background: activeTab === tab && !activeGameMode ? 'var(--bg-tertiary)' : 'transparent',
-                  borderColor: activeTab === tab && !activeGameMode ? 'var(--accent-gold)' : 'transparent',
-                  color: activeTab === tab && !activeGameMode ? 'var(--accent-gold)' : 'var(--text-secondary)'
-                }}
-              >
-                {tab.charAt(0).toUpperCase() + tab.slice(1)}
-              </motion.button>
-            ))}
+          {/* Navigation Links — High-Tech Gaming HUD Tabs */}
+          <nav style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+            {[
+              { id: 'welcome', label: 'COMMAND DECK', icon: '⚡' },
+              { id: 'modes', label: 'MISSION MODES', icon: '🎮' },
+              { id: 'leaderboard', label: 'GLOBAL PODIUM', icon: '🏆' },
+              { id: 'architecture', label: 'TELEMETRY', icon: '🔬' }
+            ].map(tab => {
+              const isActive = activeTab === tab.id && !activeGameMode;
+              return (
+                <motion.button
+                  key={tab.id}
+                  onClick={() => {
+                    setActiveGameMode(null);
+                    setActiveTab(tab.id);
+                    if (tab.id === 'architecture') {
+                      handleFetchTelemetry();
+                      setBusEvents(eventBus.getHistory());
+                    }
+                  }}
+                  whileHover={{ scale: 1.04 }}
+                  whileTap={{ scale: 0.96 }}
+                  style={{
+                    padding: '0.45rem 0.85rem',
+                    fontSize: '0.8rem',
+                    fontFamily: 'var(--font-mono)',
+                    fontWeight: 700,
+                    letterSpacing: '0.05em',
+                    borderRadius: '6px',
+                    border: isActive ? '1px solid #00F0FF' : '1px solid rgba(255, 255, 255, 0.08)',
+                    background: isActive ? 'rgba(0, 240, 255, 0.15)' : 'rgba(255, 255, 255, 0.03)',
+                    color: isActive ? '#00F0FF' : 'rgba(255, 255, 255, 0.7)',
+                    boxShadow: isActive ? '0 0 15px rgba(0, 240, 255, 0.3)' : 'none',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.4rem',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  <span style={{ fontSize: '0.9rem' }}>{tab.icon}</span>
+                  <span>{tab.label}</span>
+                </motion.button>
+              );
+            })}
 
-            {/* Watch Intro Video Button */}
+            {/* Replay Cinematic Cutscene Button */}
             <motion.button
               onClick={() => setShowCinematicModal(true)}
-              className="btn-secondary"
-              whileHover={{ scale: 1.05, boxShadow: '0 0 15px rgba(0, 240, 255, 0.4)' }}
+              whileHover={{ scale: 1.05, boxShadow: '0 0 20px rgba(0, 240, 255, 0.5)' }}
               whileTap={{ scale: 0.95 }}
               style={{
-                padding: '0.5rem 0.9rem',
-                fontSize: '0.85rem',
-                borderRadius: 'var(--radius-sm)',
-                borderColor: '#00F0FF',
+                padding: '0.45rem 0.9rem',
+                fontSize: '0.8rem',
+                fontFamily: 'var(--font-mono)',
+                fontWeight: 800,
+                letterSpacing: '0.05em',
+                borderRadius: '6px',
+                border: '1.5px solid #00F0FF',
                 color: '#00F0FF',
-                fontWeight: 700,
+                background: 'rgba(0, 240, 255, 0.1)',
+                cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '0.4rem',
-                background: 'rgba(0, 240, 255, 0.08)'
+                gap: '0.45rem',
+                boxShadow: '0 0 12px rgba(0, 240, 255, 0.25)',
+                transition: 'all 0.2s ease'
               }}
-              title="Watch the official 3D animated cinematic intro video"
+              title="Watch the official 3D animated cinematic intro cutscene"
             >
               <span>🎬</span>
-              <span>Watch Intro</span>
+              <span>PLAY INTRO</span>
             </motion.button>
           </nav>
 
           {/* Audio Controls & Virtual Identity (Theme 2 & 4) */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
             {/* Native Web Audio API Mute Toggle */}
             <motion.button
               onClick={handleToggleAudio}
-              className="btn-secondary"
-              whileTap={{ scale: 0.9 }}
+              whileTap={{ scale: 0.92 }}
               style={{
-                padding: '0.45rem 0.85rem',
-                fontSize: '0.85rem',
+                padding: '0.4rem 0.75rem',
+                fontSize: '0.78rem',
+                fontFamily: 'var(--font-mono)',
+                fontWeight: 700,
                 display: 'flex',
                 alignItems: 'center',
                 gap: '0.4rem',
-                borderColor: isMuted ? 'var(--border-subtle)' : 'var(--accent-gold)'
+                borderRadius: '6px',
+                border: isMuted ? '1px solid rgba(255, 255, 255, 0.15)' : '1px solid rgba(0, 240, 255, 0.4)',
+                background: isMuted ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 240, 255, 0.08)',
+                color: isMuted ? 'rgba(255, 255, 255, 0.5)' : '#00F0FF',
+                cursor: 'pointer'
               }}
               title={isMuted ? 'Unmute Sound Effects' : 'Mute Sound Effects'}
             >
               <span>{isMuted ? '🔇' : '🔊'}</span>
-              <span style={{ fontSize: '0.75rem', color: isMuted ? 'var(--text-muted)' : 'var(--accent-yellow)' }}>
-                {isMuted ? 'Muted' : 'Sound ON'}
-              </span>
+              <span>{isMuted ? 'MUTED' : 'SYNTH ON'}</span>
             </motion.button>
 
             {currentUser ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: '0.3rem 0.65rem',
+                  borderRadius: '20px',
+                  background: 'rgba(0, 240, 255, 0.08)',
+                  border: '1px solid rgba(0, 240, 255, 0.3)'
+                }}>
                   {currentUser.avatarUrl ? (
                     <img
                       src={currentUser.avatarUrl}
                       alt={currentUser.username}
-                      style={{ width: '36px', height: '36px', borderRadius: '50%', border: '2px solid var(--accent-gold)' }}
+                      style={{ width: '28px', height: '28px', borderRadius: '50%', border: '1.5px solid #00F0FF' }}
                     />
                   ) : (
                     <div style={{
-                      width: '36px',
-                      height: '36px',
+                      width: '28px',
+                      height: '28px',
                       borderRadius: '50%',
-                      background: 'var(--accent-gold)',
+                      background: 'linear-gradient(135deg, #00F0FF, #0284C7)',
                       color: '#000',
-                      fontWeight: 800,
+                      fontWeight: 900,
                       display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'center'
+                      justifyContent: 'center',
+                      fontSize: '0.85rem'
                     }}>
                       {currentUser.username.charAt(0).toUpperCase()}
                     </div>
                   )}
                   <div style={{ textAlign: 'left' }}>
-                    <div style={{ fontSize: '0.85rem', fontWeight: 700 }}>{currentUser.username}</div>
-                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
-                      {currentUser.authProvider === 'google' ? 'Google Account' : 'Guest Identity'}
+                    <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#FFFFFF', lineHeight: 1.1 }}>{currentUser.username}</div>
+                    <div style={{ fontSize: '0.65rem', color: '#38BDF8', fontFamily: 'var(--font-mono)' }}>
+                      {currentUser.authProvider === 'google' ? 'GOOGLE IDENTITY' : 'VIRTUAL GUEST'}
                     </div>
                   </div>
                 </div>
 
                 <button
                   onClick={handleLogout}
-                  className="btn-secondary"
-                  style={{ padding: '0.4rem 0.85rem', fontSize: '0.8rem' }}
+                  style={{
+                    padding: '0.35rem 0.75rem',
+                    fontSize: '0.75rem',
+                    borderRadius: '6px',
+                    border: '1px solid rgba(239, 68, 68, 0.4)',
+                    background: 'rgba(239, 68, 68, 0.1)',
+                    color: '#FCA5A5',
+                    cursor: 'pointer',
+                    fontWeight: 700
+                  }}
                 >
-                  Logout
+                  LOGOUT
                 </button>
               </div>
             ) : (
-              <button
+              <motion.button
                 onClick={() => setShowAuthModal(true)}
-                className="btn-primary"
-                style={{ padding: '0.5rem 1.25rem', fontSize: '0.85rem' }}
+                whileHover={{ scale: 1.05, boxShadow: '0 0 20px rgba(0, 240, 255, 0.5)' }}
+                whileTap={{ scale: 0.95 }}
+                style={{
+                  padding: '0.45rem 1.15rem',
+                  fontSize: '0.82rem',
+                  fontWeight: 800,
+                  fontFamily: 'var(--font-mono)',
+                  letterSpacing: '0.05em',
+                  borderRadius: '6px',
+                  border: '1.5px solid #00F0FF',
+                  background: 'linear-gradient(135deg, rgba(0, 240, 255, 0.2) 0%, rgba(2, 132, 199, 0.2) 100%)',
+                  color: '#00F0FF',
+                  cursor: 'pointer'
+                }}
               >
-                🔐 Sign In / Guest
-              </button>
+                🔐 SIGN IN / GUEST
+              </motion.button>
             )}
           </div>
         </div>
@@ -557,73 +629,107 @@ export default function App() {
                         transition={{ delay: 0.5 }}
                         style={{ display: 'flex', justifyContent: 'center', gap: '1rem', flexWrap: 'wrap' }}
                       >
+                        {/* 1v1 Battle Mode Flagship */}
                         <motion.button
                           onClick={() => setIsMultiplayerActive(true)}
                           className="btn-primary"
-                          whileHover={{ scale: 1.05, boxShadow: '0 0 35px rgba(255, 215, 0, 0.6)' }}
+                          whileHover={{ scale: 1.05, boxShadow: '0 0 35px rgba(0, 240, 255, 0.8)' }}
                           whileTap={{ scale: 0.95 }}
                           style={{
-                            fontSize: '1.05rem',
-                            padding: '0.9rem 1.75rem',
-                            background: 'linear-gradient(135deg, #FFD700 0%, #F59E0B 100%)',
-                            color: '#000',
-                            fontWeight: 900
+                            fontSize: '1rem',
+                            padding: '0.9rem 1.8rem',
+                            background: 'linear-gradient(135deg, #00F0FF 0%, #0284C7 50%, #FFD700 100%)',
+                            color: '#020617',
+                            fontWeight: 900,
+                            fontFamily: 'var(--font-mono)',
+                            letterSpacing: '0.04em',
+                            boxShadow: '0 0 25px rgba(0, 240, 255, 0.5)'
                           }}
                         >
-                          ⚔️ 1v1 Battle a Friend (3/5/7 Min)
+                          ⚔️ 1v1 CYBER DUEL (3/5/7 MIN)
                         </motion.button>
+
                         <motion.button
                           onClick={() => handleStartGame(GAME_MODES.SPEED_RUSH)}
                           className="btn-secondary"
-                          whileHover={{ scale: 1.05 }}
+                          whileHover={{ scale: 1.05, borderColor: '#A855F7', boxShadow: '0 0 20px rgba(168, 85, 247, 0.4)' }}
                           whileTap={{ scale: 0.95 }}
-                          style={{ fontSize: '1.05rem', padding: '0.9rem 1.75rem' }}
+                          style={{
+                            fontSize: '0.95rem',
+                            padding: '0.9rem 1.6rem',
+                            fontFamily: 'var(--font-mono)',
+                            borderColor: 'rgba(168, 85, 247, 0.5)',
+                            color: '#C084FC',
+                            fontWeight: 700
+                          }}
                         >
-                          ⚡ Stuart’s Speed Rush (60s)
+                          ⚡ SPEED RUSH (60s)
                         </motion.button>
+
                         <motion.button
                           onClick={() => handleStartGame(GAME_MODES.SURVIVAL)}
                           className="btn-secondary"
-                          whileHover={{ scale: 1.05 }}
+                          whileHover={{ scale: 1.05, borderColor: '#EF4444', boxShadow: '0 0 20px rgba(239, 68, 68, 0.4)' }}
                           whileTap={{ scale: 0.95 }}
-                          style={{ fontSize: '1.05rem', padding: '0.9rem 1.75rem' }}
+                          style={{
+                            fontSize: '0.95rem',
+                            padding: '0.9rem 1.6rem',
+                            fontFamily: 'var(--font-mono)',
+                            borderColor: 'rgba(239, 68, 68, 0.5)',
+                            color: '#F87171',
+                            fontWeight: 700
+                          }}
                         >
-                          🛡️ Kevin’s Survival (3 Strikes)
+                          🛡️ SURVIVAL (3 LIVES)
                         </motion.button>
+
                         <motion.button
                           onClick={() => handleStartGame(GAME_MODES.STREAK_MASTER)}
                           className="btn-secondary"
-                          whileHover={{ scale: 1.05 }}
+                          whileHover={{ scale: 1.05, borderColor: '#FFD700', boxShadow: '0 0 20px rgba(255, 215, 0, 0.4)' }}
                           whileTap={{ scale: 0.95 }}
-                          style={{ fontSize: '1.05rem', padding: '0.9rem 1.75rem', borderColor: 'var(--accent-gold)', color: 'var(--accent-yellow)' }}
+                          style={{
+                            fontSize: '0.95rem',
+                            padding: '0.9rem 1.6rem',
+                            fontFamily: 'var(--font-mono)',
+                            borderColor: 'rgba(255, 215, 0, 0.5)',
+                            color: '#FFD700',
+                            fontWeight: 700
+                          }}
                         >
-                          🎯 Perfect 10 Streak
+                          🎯 PERFECT 10
                         </motion.button>
+
                         <motion.button
                           onClick={() => setShowCinematicModal(true)}
                           className="btn-secondary"
-                          whileHover={{ scale: 1.05 }}
+                          whileHover={{ scale: 1.05, boxShadow: '0 0 25px rgba(0, 240, 255, 0.6)' }}
                           whileTap={{ scale: 0.95 }}
                           style={{
-                            fontSize: '1.05rem',
-                            padding: '0.9rem 1.75rem',
-                            borderColor: '#FFD700',
-                            color: '#FFD700',
+                            fontSize: '0.95rem',
+                            padding: '0.9rem 1.6rem',
+                            fontFamily: 'var(--font-mono)',
+                            borderColor: '#00F0FF',
+                            color: '#00F0FF',
                             fontWeight: 800,
-                            background: 'rgba(255, 215, 0, 0.1)',
-                            boxShadow: '0 0 20px rgba(255, 215, 0, 0.2)'
+                            background: 'rgba(0, 240, 255, 0.12)',
+                            boxShadow: '0 0 15px rgba(0, 240, 255, 0.25)'
                           }}
                         >
-                          🎬 Watch Cinematic Intro
+                          🎬 PLAY CUTSCENE
                         </motion.button>
                       </motion.div>
                     </div>
 
-                    {/* 4 Academic Themes Grid */}
+                    {/* 4 Academic Themes Grid (Sci-Fi Subsystems) */}
                     <div style={{ marginBottom: '2.5rem' }}>
-                      <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <span>🏛️</span> Academic Core: The Four Module Themes
-                      </h3>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
+                        <h3 style={{ fontSize: '1.4rem', fontWeight: 800, margin: 0, display: 'flex', alignItems: 'center', gap: '0.6rem', color: '#FFFFFF' }}>
+                          <span style={{ color: '#00F0FF' }}>⚡</span> ACADEMIC CORE: FOUR MODULE SUBSYSTEMS
+                        </h3>
+                        <span className="cyber-badge">CIS046-3 ENTERPRISE</span>
+                      </div>
+
                       <div style={{
                         display: 'grid',
                         gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
@@ -631,51 +737,54 @@ export default function App() {
                       }}>
                         {[
                           {
-                            theme: 'Theme 1: Version Control',
-                            badge: 'Gitflow & Monorepo',
-                            desc: 'Granular Conventional Commits across client, server, and shared packages. Feature branching and milestone releases.',
-                            color: 'var(--accent-cyan)'
+                            theme: 'SYSTEM 01 // VERSION CONTROL',
+                            badge: 'GITFLOW & MONOREPO',
+                            desc: 'Conventional Commits across client, server, and shared workspaces. Milestone release tagging and feature branch isolation.',
+                            color: '#00F0FF'
                           },
                           {
-                            theme: 'Theme 2: Event-Driven Programming',
-                            badge: 'Custom EventBus & Web Audio',
-                            desc: 'Decoupled pub/sub event bus, synthesized Web Audio API sound effects, and 60 FPS requestAnimationFrame tick loop.',
-                            color: 'var(--accent-purple)'
+                            theme: 'SYSTEM 02 // EVENT-DRIVEN',
+                            badge: 'CUSTOM EVENTBUS & SYNTH',
+                            desc: 'Decoupled pub/sub event bus architecture, Web Audio API polyphonic sound synthesizer, and 60 FPS animation tick loop.',
+                            color: '#A855F7'
                           },
                           {
-                            theme: 'Theme 3: Interoperability',
-                            badge: 'Banana API & GIS',
-                            desc: 'RESTful HTTPS communication with Marc Conrad Banana API, offline procedural SVG fallback, and HMAC solution sealing.',
-                            color: 'var(--accent-gold)'
+                            theme: 'SYSTEM 03 // INTEROPERABILITY',
+                            badge: 'BANANA API & HMAC',
+                            desc: 'Real-time HTTPS communication with Marc Conrad Banana API, offline procedural SVG fallback, and HMAC-SHA256 solution sealing.',
+                            color: '#FFD700'
                           },
                           {
-                            theme: 'Theme 4: Virtual Identity',
-                            badge: 'Google OAuth & Guest Auth',
-                            desc: 'Federated identity via Google OpenID Connect, Guest virtual identities, bcrypt password hashing, and HttpOnly cookies.',
-                            color: 'var(--accent-emerald)'
+                            theme: 'SYSTEM 04 // VIRTUAL IDENTITY',
+                            badge: 'GOOGLE OAUTH & GUEST AUTH',
+                            desc: 'Federated identity via Google OpenID Connect, Guest virtual sessions, bcrypt hashing, and Role-Based Access Control (RBAC).',
+                            color: '#34D399'
                           }
                         ].map((item, index) => (
                           <motion.div
                             key={item.theme}
-                            className="glass-panel"
+                            className="cyber-panel"
                             initial={{ opacity: 0, y: 30 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.1 * index }}
-                            whileHover={{ scale: 1.02, borderColor: item.color }}
-                            style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column' }}
+                            whileHover={{ scale: 1.03, borderColor: item.color, boxShadow: `0 0 25px ${item.color}40` }}
+                            style={{ padding: '1.6rem', display: 'flex', flexDirection: 'column' }}
                           >
                             <div style={{
-                              fontSize: '0.75rem',
-                              fontWeight: 700,
+                              fontSize: '0.72rem',
+                              fontWeight: 800,
+                              fontFamily: 'var(--font-mono)',
                               textTransform: 'uppercase',
                               color: item.color,
                               marginBottom: '0.5rem',
-                              letterSpacing: '0.05em'
+                              letterSpacing: '0.08em'
                             }}>
                               {item.badge}
                             </div>
-                            <h4 style={{ fontSize: '1.15rem', marginBottom: '0.75rem' }}>{item.theme}</h4>
-                            <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: 1.5, flex: 1 }}>
+                            <h4 style={{ fontSize: '1.05rem', fontWeight: 800, marginBottom: '0.75rem', color: '#FFFFFF', letterSpacing: '0.02em' }}>
+                              {item.theme}
+                            </h4>
+                            <p style={{ fontSize: '0.88rem', color: 'rgba(255, 255, 255, 0.65)', lineHeight: 1.55, flex: 1, margin: 0 }}>
                               {item.desc}
                             </p>
                           </motion.div>
@@ -730,7 +839,7 @@ export default function App() {
                   </motion.div>
                 )}
 
-                {/* Tab: Game Modes (Expanded 5 Modes) */}
+                {/* Tab: Game Modes (Expanded 5 Cyber Simulations) */}
                 {activeTab === 'modes' && (
                   <motion.div
                     key="modes"
@@ -738,12 +847,23 @@ export default function App() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.4 }}
                   >
-                    <h2 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '0.5rem' }}>
-                      Select Arcade Challenge Mode
-                    </h2>
-                    <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>
-                      Choose your test parameter. All modes communicate live with Marc Conrad&apos;s Banana API.
-                    </p>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+                      <div>
+                        <h2 style={{ fontSize: '2.2rem', fontWeight: 900, margin: 0, color: '#FFFFFF', letterSpacing: '-0.02em' }}>
+                          MISSION <span style={{
+                            background: 'linear-gradient(135deg, #00F0FF, #FFD700)',
+                            WebkitBackgroundClip: 'text',
+                            WebkitTextFillColor: 'transparent'
+                          }}>MODES</span>
+                        </h2>
+                        <p style={{ color: '#38BDF8', margin: '0.35rem 0 0 0', fontFamily: 'var(--font-mono)', fontSize: '0.85rem' }}>
+                          AUTHORITATIVE MATH SIMULATIONS // CONNECTED LIVE TO MARC CONRAD BANANA API
+                        </p>
+                      </div>
+                      <span className="cyber-badge" style={{ fontSize: '0.8rem', padding: '0.35rem 0.85rem' }}>
+                        ● 5 SIMULATIONS CALIBRATED
+                      </span>
+                    </div>
 
                     <div style={{
                       display: 'grid',
@@ -753,43 +873,74 @@ export default function App() {
                       {modeCards.map((card, index) => (
                         <motion.div
                           key={card.mode}
-                          className="glass-panel mode-card"
+                          className="cyber-card"
                           initial={{ opacity: 0, y: 30 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: 0.1 * index, type: 'spring', stiffness: 200 }}
                           whileHover={{
                             scale: 1.03,
-                            y: -4,
-                            boxShadow: `0 10px 30px rgba(0,0,0,0.4), 0 0 20px ${card.color}20`
+                            y: -6,
+                            borderColor: card.color,
+                            boxShadow: `0 14px 40px rgba(0,0,0,0.8), 0 0 30px ${card.color}35`
                           }}
-                          style={{ padding: '2rem', borderTop: `4px solid ${card.color}` }}
+                          style={{ padding: '2rem', borderTop: `3px solid ${card.color}` }}
                         >
-                          <motion.div
-                            whileHover={{ rotate: [0, -10, 10, 0], scale: 1.2 }}
-                            transition={{ duration: 0.5 }}
-                            style={{ fontSize: '2rem', marginBottom: '0.5rem' }}
-                          >
-                            {card.icon}
-                          </motion.div>
-                          <h3 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '0.5rem' }}>{card.name}</h3>
-                          <div style={{ fontSize: '0.85rem', color: card.color, fontWeight: 700, marginBottom: '1rem' }}>
-                            {card.sub}
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                            <motion.div
+                              whileHover={{ rotate: [0, -10, 10, 0], scale: 1.2 }}
+                              transition={{ duration: 0.5 }}
+                              style={{
+                                fontSize: '2.4rem',
+                                filter: `drop-shadow(0 0 15px ${card.color}80)`
+                              }}
+                            >
+                              {card.icon}
+                            </motion.div>
+                            <span style={{
+                              fontFamily: 'var(--font-mono)',
+                              fontSize: '0.72rem',
+                              fontWeight: 800,
+                              color: card.color,
+                              padding: '0.2rem 0.6rem',
+                              borderRadius: '4px',
+                              background: `${card.color}15`,
+                              border: `1px solid ${card.color}40`,
+                              letterSpacing: '0.05em'
+                            }}>
+                              {card.sub.toUpperCase()}
+                            </span>
                           </div>
-                          <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '1.5rem' }}>
+
+                          <h3 style={{ fontSize: '1.4rem', fontWeight: 900, marginBottom: '0.35rem', color: '#FFFFFF' }}>{card.name}</h3>
+                          <p style={{ fontSize: '0.88rem', color: 'rgba(255, 255, 255, 0.65)', lineHeight: 1.55, marginBottom: '1.75rem' }}>
                             {card.desc}
                           </p>
+
                           <motion.button
                             onClick={() => handleStartGame(card.mode)}
-                            className={card.btnClass}
-                            whileHover={{ scale: 1.03 }}
+                            whileHover={{ scale: 1.03, boxShadow: `0 0 25px ${card.color}60` }}
                             whileTap={{ scale: 0.97 }}
                             style={{
                               width: '100%',
                               padding: '0.85rem',
-                              ...(card.btnClass === 'btn-secondary' ? { borderColor: card.color, color: card.color } : {})
+                              borderRadius: '8px',
+                              border: `1.5px solid ${card.color}`,
+                              background: `linear-gradient(135deg, ${card.color}25 0%, rgba(5, 8, 22, 0.9) 100%)`,
+                              color: '#FFFFFF',
+                              fontFamily: 'var(--font-mono)',
+                              fontWeight: 800,
+                              fontSize: '0.9rem',
+                              letterSpacing: '0.05em',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '0.5rem',
+                              boxShadow: `0 0 15px ${card.color}25`
                             }}
                           >
-                            {card.btnLabel}
+                            <span>▶</span>
+                            <span>{card.btnLabel.toUpperCase()}</span>
                           </motion.button>
                         </motion.div>
                       ))}
@@ -807,81 +958,100 @@ export default function App() {
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
                       <div>
-                        <h2 style={{ fontSize: '2rem', fontWeight: 800, margin: 0 }}>
-                          Global Hall of Fame
+                        <h2 style={{ fontSize: '2.2rem', fontWeight: 900, margin: 0, color: '#FFFFFF' }}>
+                          GLOBAL <span style={{
+                            background: 'linear-gradient(135deg, #FFD700 0%, #00F0FF 100%)',
+                            WebkitBackgroundClip: 'text',
+                            WebkitTextFillColor: 'transparent'
+                          }}>PODIUM</span>
                         </h2>
-                        <p style={{ color: 'var(--text-secondary)', margin: '0.25rem 0 0 0' }}>
-                          Top competitive solvers ranked in real time by high score, accuracy, and tier classification.
+                        <p style={{ color: '#38BDF8', margin: '0.25rem 0 0 0', fontFamily: 'var(--font-mono)', fontSize: '0.85rem' }}>
+                          AUTHORITATIVE SQLITE DATABASE RANKINGS // UPDATED IN REAL-TIME
                         </p>
                       </div>
 
                       {/* Mode Filter Selector */}
                       <div style={{ display: 'flex', gap: '0.5rem' }}>
                         {[
-                          { id: GAME_MODES.SPEED_RUSH, label: 'Speed Rush' },
-                          { id: GAME_MODES.SURVIVAL, label: 'Survival' },
-                          { id: GAME_MODES.STREAK_MASTER, label: 'Perfect 10' },
-                          { id: GAME_MODES.TIME_ATTACK, label: 'Time Attack' }
-                        ].map(m => (
-                          <motion.button
-                            key={m.id}
-                            onClick={() => {
-                              setLeaderboardMode(m.id);
-                              fetchLeaderboard(m.id);
-                            }}
-                            className="btn-secondary"
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            style={{
-                              padding: '0.4rem 0.85rem',
-                              fontSize: '0.8rem',
-                              borderRadius: 'var(--radius-sm)',
-                              background: leaderboardMode === m.id ? 'var(--accent-gold)' : 'transparent',
-                              color: leaderboardMode === m.id ? '#000' : 'var(--text-secondary)',
-                              borderColor: leaderboardMode === m.id ? 'var(--accent-yellow)' : 'var(--border-subtle)'
-                            }}
-                          >
-                            {m.label}
-                          </motion.button>
-                        ))}
+                          { id: GAME_MODES.SPEED_RUSH, label: 'SPEED RUSH' },
+                          { id: GAME_MODES.SURVIVAL, label: 'SURVIVAL' },
+                          { id: GAME_MODES.STREAK_MASTER, label: 'PERFECT 10' },
+                          { id: GAME_MODES.TIME_ATTACK, label: 'TIME ATTACK' }
+                        ].map(m => {
+                          const isSel = leaderboardMode === m.id;
+                          return (
+                            <motion.button
+                              key={m.id}
+                              onClick={() => {
+                                setLeaderboardMode(m.id);
+                                fetchLeaderboard(m.id);
+                              }}
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              style={{
+                                padding: '0.45rem 0.9rem',
+                                fontSize: '0.78rem',
+                                fontFamily: 'var(--font-mono)',
+                                fontWeight: 800,
+                                letterSpacing: '0.04em',
+                                borderRadius: '6px',
+                                background: isSel ? 'linear-gradient(135deg, #00F0FF, #0284C7)' : 'rgba(255, 255, 255, 0.04)',
+                                color: isSel ? '#020617' : 'rgba(255, 255, 255, 0.7)',
+                                border: isSel ? '1px solid #00F0FF' : '1px solid rgba(255, 255, 255, 0.1)',
+                                boxShadow: isSel ? '0 0 15px rgba(0, 240, 255, 0.4)' : 'none',
+                                cursor: 'pointer'
+                              }}
+                            >
+                              {m.label}
+                            </motion.button>
+                          );
+                        })}
                       </div>
                     </div>
 
-                    <div className="glass-panel" style={{ padding: '1.5rem', overflowX: 'auto' }}>
+                    <div className="cyber-panel" style={{ padding: '1.75rem', overflowX: 'auto' }}>
                       {leaderboardLoading ? (
-                        <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
-                          Loading verified leaderboard rankings...
+                        <div style={{ textAlign: 'center', padding: '3.5rem', color: '#00F0FF', fontFamily: 'var(--font-mono)' }}>
+                          ⚡ FETCHING AUTHORITATIVE PODIUM DATA...
                         </div>
                       ) : leaderboardRows.length === 0 ? (
-                        <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
-                          <span style={{ fontSize: '3rem' }}>🏆</span>
-                          <h3 style={{ fontSize: '1.25rem', marginTop: '0.75rem', marginBottom: '0.5rem', color: 'var(--text-primary)' }}>
+                        <div style={{ textAlign: 'center', padding: '3.5rem', color: 'rgba(255,255,255,0.6)' }}>
+                          <span style={{ fontSize: '3.5rem', filter: 'drop-shadow(0 0 20px #FFD700)' }}>🏆</span>
+                          <h3 style={{ fontSize: '1.3rem', marginTop: '1rem', marginBottom: '0.5rem', color: '#FFFFFF', fontWeight: 800 }}>
                             No Verified High Scores in {leaderboardMode} Yet!
                           </h3>
-                          <p style={{ fontSize: '0.9rem', maxWidth: '480px', margin: '0 auto 1.5rem auto' }}>
-                            Be the first solver to set a record in this mode and claim the #1 spot on the podium.
+                          <p style={{ fontSize: '0.9rem', maxWidth: '480px', margin: '0 auto 1.5rem auto', color: 'rgba(255,255,255,0.6)' }}>
+                            Be the first mathematical solver to conquer this trial and claim the #1 spot on the global podium.
                           </p>
                           <motion.button
                             onClick={() => handleStartGame(leaderboardMode)}
-                            className="btn-primary"
-                            whileHover={{ scale: 1.05 }}
+                            whileHover={{ scale: 1.05, boxShadow: '0 0 25px rgba(0, 240, 255, 0.6)' }}
                             whileTap={{ scale: 0.95 }}
-                            style={{ padding: '0.75rem 1.5rem' }}
+                            style={{
+                              padding: '0.8rem 1.8rem',
+                              borderRadius: '8px',
+                              background: 'linear-gradient(135deg, #00F0FF 0%, #0284C7 100%)',
+                              color: '#020617',
+                              fontWeight: 900,
+                              fontFamily: 'var(--font-mono)',
+                              border: 'none',
+                              cursor: 'pointer'
+                            }}
                           >
-                            Play Now to Claim #1
+                            PLAY NOW TO CLAIM #1
                           </motion.button>
                         </div>
                       ) : (
                         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
                           <thead>
-                            <tr style={{ borderBottom: '1px solid var(--border-subtle)', color: 'var(--text-muted)' }}>
-                              <th style={{ padding: '0.75rem 1rem' }}>Rank</th>
-                              <th style={{ padding: '0.75rem 1rem' }}>Player</th>
-                              <th style={{ padding: '0.75rem 1rem' }}>Tier</th>
-                              <th style={{ padding: '0.75rem 1rem' }}>High Score</th>
-                              <th style={{ padding: '0.75rem 1rem' }}>Accuracy</th>
-                              <th style={{ padding: '0.75rem 1rem' }}>Avg Speed</th>
-                              <th style={{ padding: '0.75rem 1rem' }}>Verified At</th>
+                            <tr style={{ borderBottom: '1px solid rgba(0, 240, 255, 0.2)', color: '#38BDF8', fontFamily: 'var(--font-mono)', fontSize: '0.8rem', letterSpacing: '0.05em' }}>
+                              <th style={{ padding: '0.85rem 1rem' }}>RANK</th>
+                              <th style={{ padding: '0.85rem 1rem' }}>SOLVER</th>
+                              <th style={{ padding: '0.85rem 1rem' }}>TIER</th>
+                              <th style={{ padding: '0.85rem 1rem' }}>HIGH SCORE</th>
+                              <th style={{ padding: '0.85rem 1rem' }}>ACCURACY</th>
+                              <th style={{ padding: '0.85rem 1rem' }}>AVG SPEED</th>
+                              <th style={{ padding: '0.85rem 1rem' }}>VERIFIED AT</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -890,45 +1060,69 @@ export default function App() {
                                 key={row.id}
                                 initial={{ opacity: 0, x: -20 }}
                                 animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: index * 0.05 }}
-                                style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}
+                                transition={{ delay: index * 0.04 }}
+                                style={{
+                                  borderBottom: '1px solid rgba(255,255,255,0.04)',
+                                  background: row.rank === 1 ? 'rgba(255, 215, 0, 0.05)' : 'transparent'
+                                }}
                               >
-                                <td style={{ padding: '1rem', fontWeight: 800, fontFamily: 'var(--font-mono)' }}>
-                                  {row.rank === 1 ? '🥇 #1' : row.rank === 2 ? '🥈 #2' : row.rank === 3 ? '🥉 #3' : `#${row.rank}`}
+                                <td style={{ padding: '1rem', fontWeight: 900, fontFamily: 'var(--font-mono)', fontSize: '1rem' }}>
+                                  {row.rank === 1 ? (
+                                    <span style={{ color: '#FFD700', textShadow: '0 0 10px rgba(255,215,0,0.6)' }}>🥇 #1</span>
+                                  ) : row.rank === 2 ? (
+                                    <span style={{ color: '#E2E8F0' }}>🥈 #2</span>
+                                  ) : row.rank === 3 ? (
+                                    <span style={{ color: '#F59E0B' }}>🥉 #3</span>
+                                  ) : (
+                                    <span style={{ color: 'rgba(255,255,255,0.5)' }}>#{row.rank}</span>
+                                  )}
                                 </td>
                                 <td style={{ padding: '1rem' }}>
                                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                                     {row.avatar_url ? (
-                                      <img src={row.avatar_url} alt="" style={{ width: '28px', height: '28px', borderRadius: '50%' }} />
+                                      <img src={row.avatar_url} alt="" style={{ width: '28px', height: '28px', borderRadius: '50%', border: '1.5px solid #00F0FF' }} />
                                     ) : (
-                                      <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'var(--accent-gold)', color: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>
+                                      <div style={{
+                                        width: '28px',
+                                        height: '28px',
+                                        borderRadius: '50%',
+                                        background: 'linear-gradient(135deg, #00F0FF, #0284C7)',
+                                        color: '#020617',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        fontWeight: 900,
+                                        fontSize: '0.85rem'
+                                      }}>
                                         {row.username.charAt(0)}
                                       </div>
                                     )}
-                                    <span style={{ fontWeight: 700 }}>{row.username}</span>
+                                    <span style={{ fontWeight: 800, color: '#FFFFFF' }}>{row.username}</span>
                                   </div>
                                 </td>
                                 <td style={{ padding: '1rem' }}>
                                   <span style={{
-                                    fontWeight: 800,
+                                    fontWeight: 900,
+                                    fontFamily: 'var(--font-mono)',
                                     padding: '0.2rem 0.6rem',
-                                    borderRadius: 'var(--radius-sm)',
-                                    background: 'rgba(255,255,255,0.06)',
-                                    color: row.grade_tier === 'S' ? '#FFD700' : row.grade_tier === 'A' ? '#A855F7' : 'var(--text-primary)'
+                                    borderRadius: '4px',
+                                    background: row.grade_tier === 'S' ? 'rgba(255, 215, 0, 0.15)' : 'rgba(0, 240, 255, 0.15)',
+                                    color: row.grade_tier === 'S' ? '#FFD700' : row.grade_tier === 'A' ? '#A855F7' : '#00F0FF',
+                                    border: row.grade_tier === 'S' ? '1px solid #FFD700' : '1px solid rgba(0, 240, 255, 0.4)'
                                   }}>
-                                    {row.grade_tier}
+                                    {row.grade_tier} TIER
                                   </span>
                                 </td>
-                                <td style={{ padding: '1rem', fontWeight: 900, fontFamily: 'var(--font-mono)', color: 'var(--accent-yellow)' }}>
+                                <td style={{ padding: '1rem', fontWeight: 900, fontFamily: 'var(--font-mono)', color: '#FFD700', fontSize: '1.05rem' }}>
                                   {row.high_score.toLocaleString()}
                                 </td>
-                                <td style={{ padding: '1rem', fontFamily: 'var(--font-mono)' }}>
+                                <td style={{ padding: '1rem', fontFamily: 'var(--font-mono)', color: '#34D399', fontWeight: 700 }}>
                                   {row.best_accuracy_pct}%
                                 </td>
-                                <td style={{ padding: '1rem', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>
+                                <td style={{ padding: '1rem', fontFamily: 'var(--font-mono)', color: '#38BDF8' }}>
                                   {(row.best_avg_time_ms / 1000).toFixed(1)}s
                                 </td>
-                                <td style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.8rem' }}>
+                                <td style={{ padding: '1rem', color: 'rgba(255,255,255,0.4)', fontSize: '0.8rem', fontFamily: 'var(--font-mono)' }}>
                                   {new Date(row.updated_at).toLocaleDateString()}
                                 </td>
                               </motion.tr>
@@ -948,61 +1142,76 @@ export default function App() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.4 }}
                   >
-                    <h2 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '0.5rem' }}>
-                      Enterprise Architecture &amp; Diagnostics
-                    </h2>
-                    <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>
-                      Live architectural introspection verifying Theme 2 (Event-Driven Programming) and Theme 3 (Interoperability).
-                    </p>
+                    <div style={{ marginBottom: '1.5rem' }}>
+                      <h2 style={{ fontSize: '2.2rem', fontWeight: 900, margin: 0, color: '#FFFFFF' }}>
+                        SYSTEM <span style={{
+                          background: 'linear-gradient(135deg, #00F0FF, #A855F7)',
+                          WebkitBackgroundClip: 'text',
+                          WebkitTextFillColor: 'transparent'
+                        }}>TELEMETRY</span>
+                      </h2>
+                      <p style={{ color: '#38BDF8', margin: '0.35rem 0 0 0', fontFamily: 'var(--font-mono)', fontSize: '0.85rem' }}>
+                        ARCHITECTURAL INTROSPECTION // THEME 2 (EVENT-DRIVEN) &amp; THEME 3 (INTEROPERABILITY)
+                      </p>
+                    </div>
 
                     {/* Theme 2: Custom Event Bus Activity Inspector */}
-                    <div className="glass-panel" style={{ padding: '1.5rem', marginBottom: '2rem', borderTop: '4px solid var(--accent-purple)' }}>
+                    <div className="cyber-panel" style={{ padding: '1.75rem', marginBottom: '2rem' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
                         <div>
-                          <h4 style={{ fontSize: '1.2rem', fontWeight: 800, margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <span>⚡</span> Theme 2: Decoupled CustomEventBus Signal Stream
+                          <h4 style={{ fontSize: '1.2rem', fontWeight: 800, margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#FFFFFF' }}>
+                            <span style={{ color: '#00F0FF' }}>⚡</span> THEME 2: DECOUPLED CUSTOM EVENTBUS STREAM
                           </h4>
-                          <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: '0.25rem 0 0 0' }}>
-                            Real-time audit log of published and subscribed events across the gameplay engine and Web Audio synthesizer.
+                          <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)', margin: '0.25rem 0 0 0', fontFamily: 'var(--font-mono)' }}>
+                            REAL-TIME AUDIT LOG OF DISPATCHED SIGNALS &amp; WEB AUDIO SYNTHESIZER
                           </p>
                         </div>
 
                         <button
                           onClick={() => setBusEvents(eventBus.getHistory())}
-                          className="btn-secondary"
-                          style={{ padding: '0.35rem 0.8rem', fontSize: '0.75rem' }}
+                          style={{
+                            padding: '0.4rem 0.9rem',
+                            fontSize: '0.78rem',
+                            fontFamily: 'var(--font-mono)',
+                            borderRadius: '6px',
+                            background: 'rgba(0, 240, 255, 0.1)',
+                            border: '1px solid #00F0FF',
+                            color: '#00F0FF',
+                            fontWeight: 800,
+                            cursor: 'pointer'
+                          }}
                         >
-                          🔄 Refresh Stream
+                          🔄 REFRESH STREAM
                         </button>
                       </div>
 
                       <div style={{
-                        maxHeight: '220px',
+                        maxHeight: '240px',
                         overflowY: 'auto',
-                        background: 'rgba(0,0,0,0.3)',
-                        borderRadius: 'var(--radius-md)',
-                        padding: '0.75rem',
+                        background: 'rgba(2, 6, 23, 0.85)',
+                        borderRadius: '8px',
+                        padding: '1rem',
                         fontFamily: 'var(--font-mono)',
                         fontSize: '0.8rem',
-                        border: '1px solid var(--border-subtle)',
+                        border: '1px solid rgba(0, 240, 255, 0.25)',
                         display: 'flex',
                         flexDirection: 'column',
-                        gap: '0.4rem'
+                        gap: '0.45rem'
                       }}>
                         {busEvents.length === 0 ? (
-                          <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '1.5rem 0' }}>
+                          <div style={{ color: 'rgba(255,255,255,0.4)', textAlign: 'center', padding: '2rem 0' }}>
                             No events dispatched yet. Play a game or press numpad keys to observe live pub/sub messages!
                           </div>
                         ) : (
                           busEvents.map((ev, index) => (
-                            <div key={index} style={{ display: 'flex', gap: '1rem', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.04)', paddingBottom: '0.25rem' }}>
-                              <span style={{ color: 'var(--text-muted)', fontSize: '0.7rem' }}>
+                            <div key={index} style={{ display: 'flex', gap: '1rem', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.04)', paddingBottom: '0.3rem' }}>
+                              <span style={{ color: '#38BDF8', fontSize: '0.72rem' }}>
                                 {new Date(ev.timestamp).toLocaleTimeString()}
                               </span>
-                              <span style={{ color: 'var(--accent-purple)', fontWeight: 700 }}>
+                              <span style={{ color: '#00F0FF', fontWeight: 800 }}>
                                 {ev.event}
                               </span>
-                              <span style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+                              <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.75rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
                                 {ev.payload ? JSON.stringify(ev.payload) : '∅'}
                               </span>
                             </div>
@@ -1018,39 +1227,48 @@ export default function App() {
                       marginBottom: '2rem'
                     }}>
                       {/* Live Banana API Telemetry Widget */}
-                      <div className="glass-panel" style={{ padding: '1.5rem', borderTop: '4px solid var(--accent-gold)' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                          <h4 style={{ fontSize: '1.1rem', fontWeight: 700 }}>🍌 Remote Banana API Health</h4>
+                      <div className="cyber-panel" style={{ padding: '1.75rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+                          <h4 style={{ fontSize: '1.1rem', fontWeight: 800, margin: 0, color: '#FFD700' }}>🍌 MARC CONRAD API TELEMETRY</h4>
                           <button
                             onClick={handleFetchTelemetry}
                             disabled={telemetryLoading}
-                            className="btn-secondary"
-                            style={{ padding: '0.3rem 0.75rem', fontSize: '0.75rem' }}
+                            style={{
+                              padding: '0.35rem 0.85rem',
+                              fontSize: '0.75rem',
+                              fontFamily: 'var(--font-mono)',
+                              fontWeight: 800,
+                              borderRadius: '6px',
+                              background: 'rgba(255, 215, 0, 0.1)',
+                              border: '1px solid #FFD700',
+                              color: '#FFD700',
+                              cursor: 'pointer'
+                            }}
                           >
-                            {telemetryLoading ? 'Pinging...' : 'Ping Now'}
+                            {telemetryLoading ? 'PINGING...' : 'PING NOW'}
                           </button>
                         </div>
 
                         {telemetryData ? (
-                          <div style={{ fontSize: '0.85rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                            <div>Status: <span style={{ color: 'var(--accent-emerald)', fontWeight: 700 }}>{telemetryData.status}</span></div>
-                            <div>Target URL: <code style={{ color: 'var(--accent-gold)' }}>{telemetryData.remoteApiUrl}</code></div>
-                            <div>Ping Latency: <span style={{ fontWeight: 800, fontFamily: 'var(--font-mono)' }}>{telemetryData.latencyMs}ms</span></div>
-                            <div>Fallback Generator: <span style={{ color: 'var(--accent-cyan)' }}>Procedural SVG Enabled</span></div>
+                          <div style={{ fontSize: '0.85rem', display: 'flex', flexDirection: 'column', gap: '0.65rem', fontFamily: 'var(--font-mono)' }}>
+                            <div>STATUS: <span style={{ color: '#34D399', fontWeight: 800 }}>{telemetryData.status}</span></div>
+                            <div style={{ wordBreak: 'break-all' }}>ENDPOINT: <code style={{ color: '#FFD700' }}>{telemetryData.remoteApiUrl}</code></div>
+                            <div>PING LATENCY: <span style={{ fontWeight: 900, color: '#00F0FF' }}>{telemetryData.latencyMs}ms</span></div>
+                            <div>FALLBACK GENERATOR: <span style={{ color: '#38BDF8' }}>PROCEDURAL SVG ACTIVE</span></div>
                           </div>
                         ) : (
-                          <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                            Click &apos;Ping Now&apos; to measure live HTTPS roundtrip latency to marcconrad.com.
+                          <div style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)', fontFamily: 'var(--font-mono)' }}>
+                            Click &apos;PING NOW&apos; to measure live HTTPS roundtrip latency to marcconrad.com.
                           </div>
                         )}
                       </div>
 
                       {/* Cryptographic Protection Card */}
-                      <div className="glass-panel" style={{ padding: '1.5rem', borderTop: '4px solid var(--accent-emerald)' }}>
-                        <h4 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '0.75rem' }}>
-                          🔐 HMAC-SHA256 Solution Sealing
+                      <div className="cyber-panel" style={{ padding: '1.75rem' }}>
+                        <h4 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: '0.85rem', color: '#00F0FF' }}>
+                          🔐 HMAC-SHA256 SOLUTION SEALING
                         </h4>
-                        <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                        <p style={{ fontSize: '0.88rem', color: 'rgba(255, 255, 255, 0.65)', lineHeight: 1.6, margin: 0 }}>
                           The raw mathematical solution from Marc Conrad&apos;s API is never sent directly to the client browser. Instead, the backend seals it into an HMAC-SHA256 signed token. Verification occurs exclusively on the backend server.
                         </p>
                       </div>
