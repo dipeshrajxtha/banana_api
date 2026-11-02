@@ -33,7 +33,7 @@ function extractRoomCodeFromUrl() {
     const params = new URLSearchParams(window.location.search);
     const qRoom = params.get('room') || params.get('r');
     if (qRoom && qRoom.trim()) return qRoom.trim().toUpperCase();
-  } catch {}
+  } catch { }
 
   // 2. Pathname (/room=XYZ, /room/XYZ, /rooms/XYZ, /MIN-XXXX)
   try {
@@ -46,7 +46,7 @@ function extractRoomCodeFromUrl() {
     if (minCodeMatch && minCodeMatch[1]) {
       return minCodeMatch[1].trim().toUpperCase();
     }
-  } catch {}
+  } catch { }
 
   // 3. Hash fragment (#room=XYZ or #MIN-XXXX)
   try {
@@ -55,7 +55,7 @@ function extractRoomCodeFromUrl() {
     if (hashMatch) {
       return (hashMatch[1] || hashMatch[2]).trim().toUpperCase();
     }
-  } catch {}
+  } catch { }
 
   return null;
 }
@@ -174,9 +174,26 @@ export default function App() {
   const handleLogout = async () => {
     try {
       await fetch('/api/auth/logout', { method: 'POST' });
-      setCurrentUser(null);
     } catch (err) {
-      console.error('Logout error:', err);
+      console.warn('Logout network notification note:', err);
+    } finally {
+      // Complete state flush and clean redirect to Command Deck
+      setCurrentUser(null);
+      setActiveGameMode(null);
+      setShowIntro(false);
+      setIntroMode(null);
+      setGameOverStats(null);
+      setIsMultiplayerActive(false);
+      setMultiplayerRoomId(null);
+      setActiveTab('welcome');
+
+      try {
+        sessionStorage.removeItem('banana_multiplayer_player_id');
+      } catch {}
+
+      if (typeof window !== 'undefined') {
+        window.history.replaceState({}, '', window.location.pathname);
+      }
     }
   };
 
@@ -280,7 +297,7 @@ export default function App() {
         isOpen={showCinematicModal}
         onClose={() => {
           setShowCinematicModal(false);
-          try { sessionStorage.setItem('banana_intro_seen', '1'); } catch {}
+          try { sessionStorage.setItem('banana_intro_seen', '1'); } catch { }
         }}
       />
 
