@@ -64,7 +64,16 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('welcome');
   const [currentUser, setCurrentUser] = useState(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [showCinematicModal, setShowCinematicModal] = useState(false);
+  // Auto-show cinematic intro on first visit (once per session)
+  const [showCinematicModal, setShowCinematicModal] = useState(() => {
+    // Don't show intro if user is joining a multiplayer room via URL
+    if (extractRoomCodeFromUrl()) return false;
+    // Show only if this is the first visit in this browser session
+    try {
+      const seen = sessionStorage.getItem('banana_intro_seen');
+      return !seen;
+    } catch { return false; }
+  });
   const [pendingGameMode, setPendingGameMode] = useState(null);
 
   // Audio & Event-Driven Engine State
@@ -266,17 +275,12 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      {/* 3D Animated Cinematic Intro Video Player */}
+      {/* Full-Page Cinematic Intro Video (plays on first visit) */}
       <CinematicIntroModal
         isOpen={showCinematicModal}
-        onClose={() => setShowCinematicModal(false)}
-        onStartGame={() => {
+        onClose={() => {
           setShowCinematicModal(false);
-          handleStartGame(GAME_MODES.SPEED_RUSH);
-        }}
-        onStartMultiplayer={() => {
-          setShowCinematicModal(false);
-          setIsMultiplayerActive(true);
+          try { sessionStorage.setItem('banana_intro_seen', '1'); } catch {}
         }}
       />
 
