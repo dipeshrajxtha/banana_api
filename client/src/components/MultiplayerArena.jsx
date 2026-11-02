@@ -254,7 +254,7 @@ const handleCopyLink = () => {
 };
 
 // Submit Answer
-const handleSubmitAnswer = async () => {
+const handleSubmitAnswer = useCallback(async () => {
   if (selectedDigit === null || isSubmitting || !roomState || roomState.status !== 'playing') return;
 
   const responseTimeMs = Date.now() - puzzleStartRef.current;
@@ -289,7 +289,7 @@ const handleSubmitAnswer = async () => {
   } finally {
     setIsSubmitting(false);
   }
-};
+}, [selectedDigit, isSubmitting, roomState, roomId, playerId]);
 
 // Keyboard controls
 useEffect(() => {

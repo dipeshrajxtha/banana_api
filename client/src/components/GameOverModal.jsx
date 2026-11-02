@@ -225,21 +225,22 @@ export default function GameOverModal({ stats, currentUser, onPlayAgain, onRetur
             transition={{ delay: 0.6 }}
             style={{
               display: 'inline-block',
-              background: 'rgba(255, 215, 0, 0.1)',
-              border: '1px solid rgba(255, 215, 0, 0.4)',
-              color: '#FFD700',
+              background: 'rgba(0, 240, 255, 0.12)',
+              border: '1px solid rgba(0, 240, 255, 0.4)',
+              color: '#00F0FF',
               fontWeight: 700,
               fontSize: '0.85rem',
               padding: '0.4rem 1rem',
               borderRadius: '20px',
-              marginBottom: '1.25rem'
+              marginBottom: '1.25rem',
+              fontFamily: 'var(--font-mono)'
             }}
           >
-            {grade.id === 'S' ? '🍌 “BANANAAA! MEGA MINION SUPREME GENIUS!” 🚀' :
-             grade.id === 'A' ? '⭐ “Tulaliloo! Senior Lab Mathematician!”' :
-             grade.id === 'B' ? '💛 “Bello! Certified Banana Engineer!”' :
-             grade.id === 'C' ? '🔬 “Poopaye! Good effort junior apprentice!”' :
-             '🍌 “Needs more bananas! Try again!”'}
+            {grade.id === 'S' ? '⚡ “QUANTUM SYNTHESIS OVERCLOCK: 100% MAXIMUM POTASSIUM!” 🚀' :
+             grade.id === 'A' ? '⭐ “NEURAL COPROCESSOR SYNCHRONIZED: SENIOR AI SCIENTIST!”' :
+             grade.id === 'B' ? '🔬 “CYBER CORE STABLE: ACCREDITED QUANTUM ENGINEER!”' :
+             grade.id === 'C' ? '⚙️ “DIAGNOSTICS COMPLETE: PROMISING DATA TRAJECTORY!”' :
+             '🔋 “REACTOR RECHARGE REQUIRED: RE-ENGAGE SIMULATION!”'}
           </motion.div>
 
           {/* Leaderboard High Score Banner */}
