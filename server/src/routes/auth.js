@@ -102,6 +102,12 @@ router.post('/login', authRateLimiter, async (req, res, next) => {
       throw new ForbiddenError('Account suspended: Contact administrator');
     }
 
+    // 2b. Check if account is temporarily locked due to brute-force attempts
+    if (user.locked_until && new Date(user.locked_until).getTime() > Date.now()) {
+      const remainingMinutes = Math.ceil((new Date(user.locked_until).getTime() - Date.now()) / 60000);
+      throw new ForbiddenError(`Account locked due to excessive failed attempts. Please try again in ${remainingMinutes} minute(s).`);
+    }
+
     // 3. Handle accounts provisioned via Google OAuth
     if (!user.password_hash && user.auth_provider === 'google') {
       throw new BadRequestError('This account was registered via Google. Please use "Continue with Google".');
@@ -110,7 +116,23 @@ router.post('/login', authRateLimiter, async (req, res, next) => {
     // 4. Compare bcrypt password hash
     const isMatch = await comparePassword(password, user.password_hash);
     if (!isMatch) {
+      const failedCount = await usersRepository.incrementFailedLogin(user.id);
+      await auditRepository.log({
+        userId: user.id,
+        action: failedCount >= 5 ? 'ACCOUNT_LOCKED' : 'LOGIN_FAILED',
+        ipAddress: req.ip,
+        details: { email: user.email, failedAttempts: failedCount, maxAttempts: 5 }
+      });
+
+      if (failedCount >= 5) {
+        throw new ForbiddenError('Account locked: 5 consecutive failed login attempts detected. Try again in 15 minutes.');
+      }
       throw new UnauthorizedError('Invalid credentials');
+    }
+
+    // Reset failed login attempts on successful authentication
+    if (user.failed_login_attempts > 0 || user.locked_until) {
+      await usersRepository.resetFailedLogin(user.id);
     }
 
     // 5. Generate JWT & Set HttpOnly cookie

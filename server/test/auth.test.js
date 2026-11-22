@@ -158,4 +158,45 @@ describe('Virtual Identity & Authentication Engine Integration Tests', () => {
     // Expired or cleared cookie contains expires=Thu, 01 Jan 1970
     assert.ok(cookieHeader.includes('Expires=Thu, 01 Jan 1970') || cookieHeader.includes('Max-Age=0'));
   });
+
+  test('Security Hardening: Locks account after 5 consecutive failed login attempts', async () => {
+    // Attempt incorrect logins 2, 3, 4, 5
+    for (let i = 2; i <= 4; i++) {
+      const failRes = await fetch(`${baseUrl}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: 'puzzleplayer@example.com',
+          password: 'WrongPasswordAgain!'
+        })
+      });
+      assert.equal(failRes.status, 401);
+    }
+
+    // 5th failed attempt must trigger lockout (HTTP 403 Forbidden)
+    const lockRes = await fetch(`${baseUrl}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: 'puzzleplayer@example.com',
+        password: 'WrongPasswordAgain!'
+      })
+    });
+    assert.equal(lockRes.status, 403);
+    const lockData = await lockRes.json();
+    assert.match(lockData.error.message, /locked/i);
+
+    // Subsequent attempt even with CORRECT password must still be rejected while locked
+    const blockedRes = await fetch(`${baseUrl}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: 'puzzleplayer@example.com',
+        password: 'SecurePassword123!'
+      })
+    });
+    assert.equal(blockedRes.status, 403);
+    const blockedData = await blockedRes.json();
+    assert.match(blockedData.error.message, /locked/i);
+  });
 });

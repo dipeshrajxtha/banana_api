@@ -1,0 +1,269 @@
+openapi: 3.0.3
+info:
+  title: Banana Quest Enterprise API
+  description: |
+    Enterprise REST API documentation for Banana Quest: Quantum Arcade & Minion Duel.
+    Developed for University of Bedfordshire CIS046-3 Software For Enterprise.
+    Implements Theme 3 (Interoperability) with Marc Conrad's Visual Math API and Theme 4 (Virtual Identity).
+  version: 0.3.0
+  contact:
+    name: Dipesh Raj Shrestha
+    email: xthadipesh921@gmail.com
+
+servers:
+  - url: http://localhost:5000
+    description: Local Development Backend
+  - url: http://localhost:3000
+    description: Vite Reverse Proxy Gateway
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: banana_jwt
+      description: Signed HS256 JWT stored in HttpOnly, SameSite=Lax cookie
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        email:
+          type: string
+          format: email
+          example: player@example.com
+        username:
+          type: string
+          example: StuartSolver
+        role:
+          type: string
+          enum: [player, admin]
+          example: player
+        avatarUrl:
+          type: string
+          nullable: true
+
+    PuzzleResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        puzzle:
+          type: object
+          properties:
+            question:
+              type: string
+              description: Data URI or remote image URL of visual math puzzle
+            puzzleId:
+              type: string
+              description: Cryptographically sealed HMAC-SHA256 solution token
+            isFallback:
+              type: boolean
+              description: Whether generated via procedural SVG fallback
+
+    VerifyAnswerRequest:
+      type: object
+      required:
+        - puzzleId
+        - answer
+      properties:
+        puzzleId:
+          type: string
+          description: Base64URL HMAC token returned from /api/banana/puzzle
+        answer:
+          type: integer
+          minimum: 0
+          maximum: 9
+          example: 7
+        responseTimeMs:
+          type: integer
+          example: 2450
+        currentStreak:
+          type: integer
+          example: 3
+
+    ScoreSubmissionRequest:
+      type: object
+      required:
+        - gameMode
+        - totalScore
+        - puzzlesSolved
+        - puzzlesAttempted
+      properties:
+        gameMode:
+          type: string
+          enum: [SPEED_RUSH, SURVIVAL, STREAK_MASTER, PRACTICE]
+        totalScore:
+          type: integer
+          example: 1850
+        puzzlesSolved:
+          type: integer
+          example: 12
+        puzzlesAttempted:
+          type: integer
+          example: 14
+        accuracyRate:
+          type: number
+          format: float
+          example: 85.7
+        highestStreak:
+          type: integer
+          example: 6
+
+    TelemetryResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        telemetry:
+          type: object
+          properties:
+            status:
+              type: string
+              example: online
+            totalRequests:
+              type: integer
+            successfulRequests:
+              type: integer
+            fallbackRequests:
+              type: integer
+            circuitBreaker:
+              type: object
+              properties:
+                state:
+                  type: string
+                  enum: [CLOSED, OPEN, HALF_OPEN]
+                consecutiveFailures:
+                  type: integer
+                failureThreshold:
+                  type: integer
+                cooldownMs:
+                  type: integer
+
+paths:
+  /api/health:
+    get:
+      summary: Health Check & Process Diagnostics
+      responses:
+        '200':
+          description: Server is online and database is responsive
+
+  /api/auth/register:
+    post:
+      summary: Register local user account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, username, password]
+              properties:
+                email:
+                  type: string
+                username:
+                  type: string
+                password:
+                  type: string
+                  minLength: 6
+      responses:
+        '201':
+          description: Account created successfully with HttpOnly JWT cookie
+        '400':
+          description: Validation error or duplicate email
+
+  /api/auth/login:
+    post:
+      summary: Authenticate user credentials with brute-force lockout guard
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Logged in successfully
+        '401':
+          description: Invalid credentials
+        '403':
+          description: Account locked due to 5 consecutive failed login attempts
+
+  /api/auth/guest:
+    post:
+      summary: Provision temporary virtual guest identity
+      responses:
+        '200':
+          description: Guest session provisioned
+
+  /api/banana/puzzle:
+    get:
+      summary: Fetch sealed math puzzle with zero-latency pre-caching
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PuzzleResponse'
+
+  /api/banana/verify:
+    post:
+      summary: Unseal and verify player solution with anti-cheat HMAC
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerifyAnswerRequest'
+      responses:
+        '200':
+          description: Verification result with score bonus calculations
+
+  /api/banana/telemetry:
+    get:
+      summary: Inspect external Banana API roundtrip latency and Circuit Breaker state
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TelemetryResponse'
+
+  /api/scores/submit:
+    post:
+      summary: Submit match session score and record grade tier
+      security:
+        - cookieAuth: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScoreSubmissionRequest'
+      responses:
+        '201':
+          description: Score recorded and personal best calculated
+        '401':
+          description: Authentication required
+
+  /api/rooms/create:
+    post:
+      summary: Create a 1v1 multiplayer duel room
+      responses:
+        '201':
+          description: Room created with shareable LAN/Wi-Fi code

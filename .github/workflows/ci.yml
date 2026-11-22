@@ -1,0 +1,41 @@
+name: Banana Quest Enterprise CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  validate:
+    name: Lint, Test & Build (Node ${{ matrix.node-version }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [ 18.x, 20.x ]
+
+    steps:
+      - name: Checkout Code Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install Monorepo Dependencies
+        run: npm ci
+
+      - name: Run Workspace Linter (ESLint)
+        run: npm run lint --workspaces --if-present
+
+      - name: Run Integration & Unit Test Suites (Node Test Runner)
+        run: npm test
+        env:
+          NODE_ENV: test
+          JWT_SECRET: enterprise_ci_test_secret_key_12345
+
+      - name: Compile Client Production Bundle (Vite)
+        run: npm run build --workspace=client
