@@ -1242,22 +1242,66 @@ export default function App() {
                           </p>
                         </div>
 
-                        <button
-                          onClick={() => setBusEvents(eventBus.getHistory())}
-                          style={{
-                            padding: '0.4rem 0.9rem',
-                            fontSize: '0.78rem',
-                            fontFamily: 'var(--font-mono)',
-                            borderRadius: '6px',
-                            background: 'rgba(0, 240, 255, 0.1)',
-                            border: '1px solid #00F0FF',
-                            color: '#00F0FF',
-                            fontWeight: 800,
-                            cursor: 'pointer'
-                          }}
-                        >
-                          🔄 REFRESH STREAM
-                        </button>
+                        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                          <button
+                            onClick={async () => {
+                              await eventBus.replayHistory(10, 250);
+                              setBusEvents(eventBus.getHistory());
+                            }}
+                            style={{
+                              padding: '0.4rem 0.85rem',
+                              fontSize: '0.78rem',
+                              fontFamily: 'var(--font-mono)',
+                              borderRadius: '6px',
+                              background: 'rgba(168, 85, 247, 0.15)',
+                              border: '1px solid #A855F7',
+                              color: '#C084FC',
+                              fontWeight: 800,
+                              cursor: 'pointer'
+                            }}
+                            title="Replay past 10 dispatched events sequentially"
+                          >
+                            ▶ REPLAY HISTORY
+                          </button>
+
+                          <button
+                            onClick={() => {
+                              eventBus.emit(GAME_EVENTS.INPUT_DIGIT, { digit: Math.floor(Math.random() * 10), simulated: true });
+                              setBusEvents(eventBus.getHistory());
+                            }}
+                            style={{
+                              padding: '0.4rem 0.85rem',
+                              fontSize: '0.78rem',
+                              fontFamily: 'var(--font-mono)',
+                              borderRadius: '6px',
+                              background: 'rgba(245, 158, 11, 0.15)',
+                              border: '1px solid #F59E0B',
+                              color: '#FBBF24',
+                              fontWeight: 800,
+                              cursor: 'pointer'
+                            }}
+                            title="Simulate a live digit press event into the EventBus"
+                          >
+                            ⚡ SIMULATE EVENT
+                          </button>
+
+                          <button
+                            onClick={() => setBusEvents(eventBus.getHistory())}
+                            style={{
+                              padding: '0.4rem 0.85rem',
+                              fontSize: '0.78rem',
+                              fontFamily: 'var(--font-mono)',
+                              borderRadius: '6px',
+                              background: 'rgba(0, 240, 255, 0.1)',
+                              border: '1px solid #00F0FF',
+                              color: '#00F0FF',
+                              fontWeight: 800,
+                              cursor: 'pointer'
+                            }}
+                          >
+                            🔄 REFRESH
+                          </button>
+                        </div>
                       </div>
 
                       <div style={{
@@ -1329,6 +1373,7 @@ export default function App() {
                             <div>STATUS: <span style={{ color: '#34D399', fontWeight: 800 }}>{telemetryData.status}</span></div>
                             <div style={{ wordBreak: 'break-all' }}>ENDPOINT: <code style={{ color: '#FFD700' }}>{telemetryData.remoteApiUrl}</code></div>
                             <div>PING LATENCY: <span style={{ fontWeight: 900, color: '#00F0FF' }}>{telemetryData.latencyMs}ms</span></div>
+                            <div>CIRCUIT BREAKER: <span style={{ color: telemetryData.circuitBreaker?.state === 'OPEN' ? '#EF4444' : '#34D399', fontWeight: 900 }}>{telemetryData.circuitBreaker?.state || 'CLOSED'} ({telemetryData.circuitBreaker?.consecutiveFailures || 0} failures)</span></div>
                             <div>FALLBACK GENERATOR: <span style={{ color: '#38BDF8' }}>PROCEDURAL SVG ACTIVE</span></div>
                           </div>
                         ) : (

@@ -152,6 +152,8 @@ export async function initDb(customPath = null) {
       avatar_url TEXT,
       role TEXT NOT NULL DEFAULT 'player',         -- 'player' | 'admin'
       is_banned INTEGER NOT NULL DEFAULT 0,       -- 0: active, 1: suspended
+      failed_login_attempts INTEGER NOT NULL DEFAULT 0, -- Brute-force protection
+      locked_until DATETIME,                      -- Account lockout timestamp
       created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
@@ -210,4 +212,12 @@ export async function initDb(customPath = null) {
   `;
 
   await exec(schemaSql);
+
+  // Progressive Schema Migrations for Progressive Hardening
+  try {
+    await run('ALTER TABLE users ADD COLUMN failed_login_attempts INTEGER NOT NULL DEFAULT 0;');
+  } catch {}
+  try {
+    await run('ALTER TABLE users ADD COLUMN locked_until DATETIME;');
+  } catch {}
 }

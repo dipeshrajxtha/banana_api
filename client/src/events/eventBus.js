@@ -121,6 +121,21 @@ export class CustomEventBus {
   }
 
   /**
+   * Replays recorded historical events sequentially for tutor demonstrations & testing.
+   * @param {number} [limit=10] - Number of recent events to replay
+   * @param {number} [intervalMs=250] - Delay between replayed events
+   * @returns {Promise<number>} Count of replayed events
+   */
+  async replayHistory(limit = 10, intervalMs = 250) {
+    const eventsToReplay = this.history.slice(0, limit).reverse();
+    for (const record of eventsToReplay) {
+      await new Promise((r) => setTimeout(r, intervalMs));
+      this.emit(record.event, record.payload);
+    }
+    return eventsToReplay.length;
+  }
+
+  /**
    * Clears all registered event listeners and historical logs.
    */
   clear() {

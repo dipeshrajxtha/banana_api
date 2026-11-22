@@ -22,6 +22,78 @@ const telemetry = {
   status: 'initialized'
 };
 
+/**
+ * 3-State Enterprise Circuit Breaker Pattern (Theme 3: Interoperability)
+ * Protects system from cascading latency failures when Marc Conrad API is slow or down.
+ * States:
+ *   - CLOSED: Normal operation. Requests flow to the remote API.
+ *   - OPEN: Tripped after 3 consecutive errors/timeouts. Calls immediately bypass network and invoke SVG fallback.
+ *   - HALF_OPEN: After cooldown period (15s), permits single trial probe. Success closes circuit; failure re-opens it.
+ */
+export class CircuitBreaker {
+  constructor({ failureThreshold = 3, cooldownMs = 15000 } = {}) {
+    this.failureThreshold = failureThreshold;
+    this.cooldownMs = cooldownMs;
+    this.state = 'CLOSED'; // 'CLOSED' | 'OPEN' | 'HALF_OPEN'
+    this.consecutiveFailures = 0;
+    this.lastStateChange = Date.now();
+    this.totalTripped = 0;
+  }
+
+  canRequest() {
+    const now = Date.now();
+    if (this.state === 'OPEN') {
+      if (now - this.lastStateChange >= this.cooldownMs) {
+        this.state = 'HALF_OPEN';
+        this.lastStateChange = now;
+        return true;
+      }
+      return false; // Fast-fail without waiting for network timeout
+    }
+    return true;
+  }
+
+  recordSuccess() {
+    this.consecutiveFailures = 0;
+    if (this.state === 'HALF_OPEN') {
+      this.state = 'CLOSED';
+      this.lastStateChange = Date.now();
+    }
+  }
+
+  recordFailure() {
+    this.consecutiveFailures += 1;
+    if (this.state === 'HALF_OPEN' || this.consecutiveFailures >= this.failureThreshold) {
+      this.state = 'OPEN';
+      this.lastStateChange = Date.now();
+      this.totalTripped += 1;
+    }
+  }
+
+  getState() {
+    if (this.state === 'OPEN' && Date.now() - this.lastStateChange >= this.cooldownMs) {
+      this.state = 'HALF_OPEN';
+      this.lastStateChange = Date.now();
+    }
+    return {
+      state: this.state,
+      consecutiveFailures: this.consecutiveFailures,
+      failureThreshold: this.failureThreshold,
+      cooldownMs: this.cooldownMs,
+      totalTripped: this.totalTripped,
+      lastStateChange: new Date(this.lastStateChange).toISOString()
+    };
+  }
+
+  reset() {
+    this.state = 'CLOSED';
+    this.consecutiveFailures = 0;
+    this.lastStateChange = Date.now();
+  }
+}
+
+export const circuitBreaker = new CircuitBreaker();
+
 // In-memory pre-fetched puzzle cache to avoid hammering the university API
 const puzzleCache = [];
 const TARGET_CACHE_SIZE = 5;
@@ -164,6 +236,15 @@ export const bananaApiService = {
     telemetry.totalRequests += 1;
     const startTime = Date.now();
 
+    // Fast-fail if Circuit Breaker is OPEN (avoiding 3,000ms latency on failing external API)
+    if (!circuitBreaker.canRequest()) {
+      telemetry.fallbackRequests += 1;
+      telemetry.lastPingMs = 0;
+      telemetry.lastCheckedAt = new Date().toISOString();
+      telemetry.status = 'circuit_open_fallback';
+      return generateFallbackPuzzle();
+    }
+
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), config.services.bananaApiTimeoutMs);
 
@@ -187,6 +268,7 @@ export const bananaApiService = {
         throw new Error('Invalid JSON payload structure received from Banana API');
       }
 
+      circuitBreaker.recordSuccess();
       telemetry.successfulRequests += 1;
       telemetry.lastPingMs = Date.now() - startTime;
       telemetry.lastCheckedAt = new Date().toISOString();
@@ -199,12 +281,13 @@ export const bananaApiService = {
       };
     } catch (err) {
       clearTimeout(timeoutId);
+      circuitBreaker.recordFailure();
       telemetry.fallbackRequests += 1;
       telemetry.lastPingMs = Date.now() - startTime;
       telemetry.lastCheckedAt = new Date().toISOString();
-      telemetry.status = 'offline_fallback';
+      telemetry.status = circuitBreaker.state === 'OPEN' ? 'circuit_open_fallback' : 'offline_fallback';
 
-      console.warn(`[BananaApiService] External API error (${err.message}). Activating procedural fallback.`);
+      console.warn(`[BananaApiService] External API error (${err.message}). Circuit Breaker: ${circuitBreaker.state}. Procedural fallback active.`);
       return generateFallbackPuzzle();
     }
   },
@@ -282,7 +365,8 @@ export const bananaApiService = {
     return {
       ...telemetry,
       cacheBufferSize: puzzleCache.length,
-      targetUrl: config.services.bananaApiUrl
+      targetUrl: config.services.bananaApiUrl,
+      circuitBreaker: circuitBreaker.getState()
     };
   }
 };

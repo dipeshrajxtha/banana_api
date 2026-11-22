@@ -71,6 +71,39 @@ export const usersRepository = {
   },
 
   /**
+   * Increments consecutive failed login attempts and sets lockout timestamp if threshold exceeded
+   * @param {number} id
+   * @param {number} [maxAttempts=5]
+   * @param {number} [lockMinutes=15]
+   * @returns {Promise<number>} New failed attempts count
+   */
+  async incrementFailedLogin(id, maxAttempts = 5, lockMinutes = 15) {
+    const user = await this.findById(id);
+    if (!user) return 0;
+    const nextAttempts = (user.failed_login_attempts || 0) + 1;
+    let lockedUntil = null;
+    if (nextAttempts >= maxAttempts) {
+      lockedUntil = new Date(Date.now() + lockMinutes * 60 * 1000).toISOString();
+    }
+    await run(
+      'UPDATE users SET failed_login_attempts = ?, locked_until = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+      [nextAttempts, lockedUntil, id]
+    );
+    return nextAttempts;
+  },
+
+  /**
+   * Resets failed login attempts and lifts lockout on successful authentication
+   * @param {number} id
+   */
+  async resetFailedLogin(id) {
+    await run(
+      'UPDATE users SET failed_login_attempts = 0, locked_until = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+      [id]
+    );
+  },
+
+  /**
    * Toggles account ban status (Admin moderation)
    */
   async setBanStatus(id, isBanned) {
